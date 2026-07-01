@@ -1,4 +1,4 @@
-# Coderithm Event Management Platform
+# Codrithm Event Management Platform
 
 Event discovery, registration, and management platform built with Next.js frontend and FastAPI backend.
 
