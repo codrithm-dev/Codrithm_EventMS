@@ -1,19 +1,41 @@
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
+# Dependencies
+node_modules/
 .venv/
+venv/
+__pycache__/
+*.pyc
+
+# Environment
 .env
+.env.local
+.env.*.local
+
+# Build
+frontend/dist/
+frontend/.next/
+frontend/out/
+frontend/build/
+backend/*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Python
 *.egg-info/
 dist/
 build/
-.eggs/
-*.log
-.DS_Store
-.mypy_cache/
 .pytest_cache/
+.mypy_cache/
 .coverage
 htmlcov/
