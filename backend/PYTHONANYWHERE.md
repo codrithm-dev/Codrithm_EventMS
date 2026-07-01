@@ -1,70 +1,64 @@
 # PythonAnywhere Deployment Guide
 
-## Step-by-Step Setup
+## Step 1: Create Account
+- Go to https://www.pythonanywhere.com/pricing/
+- Sign up (free **Hacker** tier)
 
-### 1. Create PythonAnywhere Account
-- Go to https://www.pythonanywhere.com/pricing/ (free "Hacker" tier)
-- Sign up with your email
+---
 
-### 2. Upload Your Code
-**Option A: Git (recommended)**
+## Step 2: Clone Your Repo
+Open **Bash console** from the dashboard:
 ```bash
-# On PythonAnywhere Bash console:
 cd ~
-git clone https://github.com/yourusername/yourrepo.git mysite
-cd mysite/backend
+git clone https://github.com/codrithm-dev/Codrithm_EventMS.git mysite
 ```
 
-**Option B: File Upload**
-1. Go to "Files" tab in PythonAnywhere dashboard
-2. Create folder: `mysite`
-3. Upload everything from your `backend/` folder into `~/mysite/`
+---
 
-### 3. Set Up Virtual Environment
+## Step 3: Install Dependencies
 ```bash
-cd ~/mysite
-python3.10 -m venv venv
-source venv/bin/activate
-cd backend
+cd ~/mysite/backend
+python3.10 -m venv ../venv
+source ../venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Configure Web App
-1. Go to **Web** tab in PythonAnywhere dashboard
-2. Click **Add new web app**
-3. Choose **Manual configuration** → **Python 3.10**
-4. Set these values:
+---
 
-**Source code:** `/home/yourusername/mysite/backend`
+## Step 4: Create Web App
+1. Go to **Web** tab
+2. Click **"Add a new web app"**
+3. Choose **"Manual configuration"**
+4. Choose **Python 3.10**
 
-**Working directory:** `/home/yourusername/mysite/backend`
+---
 
-**WSGI configuration file:** `/home/yourusername/mysite/wsgi.py`
+## Step 5: Set Paths (Web tab)
 
-### 5. Set Environment Variables
-In the **Web** tab, scroll to **Environment variables** and add:
+| Setting | Value |
+|---------|-------|
+| **Source code** | `/home/yourusername/mysite/backend` |
+| **Working directory** | `/home/yourusername/mysite/backend` |
 
-| Key | Value |
-|-----|-------|
-| `DATABASE_URL` | `sqlite+aiosqlite:///./coderithm_events.db` |
-| `SECRET_KEY` | (generate a random string, e.g. `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`) |
-| `DEBUG` | `False` |
-| `FRONTEND_URL` | `https://yourusername.pythonanywhere.com` |
-| `APP_URL` | `https://yourusername.pythonanywhere.com` |
-| `RESEND_API_KEY` | (optional, for emails) |
+> Replace `yourusername` with your actual PythonAnywhere username
 
-### 6. Set WSGI Path
-In the Web tab → **WSGI configuration file**, edit it to:
+---
+
+## Step 6: Edit WSGI File
+
+1. In **Web** tab → click the **WSGI file path** (blue link)
+2. **Delete everything** and paste this:
+
 ```python
 import sys
 import os
 
-project_home = '/home/yourusername/mysite'
+project_home = '/home/yourusername/mysite/backend'
 if project_home not in sys.path:
     sys.path.insert(0, project_home)
 
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./coderithm_events.db")
-os.environ.setdefault("SECRET_KEY", "your-secret-key")
+os.environ.setdefault("SECRET_KEY", "CHANGE-ME")
 os.environ.setdefault("DEBUG", "False")
 
 from a2wsgi import ASGIMiddleware
@@ -73,13 +67,112 @@ from app.main import app
 application = ASGIMiddleware(app)
 ```
 
-### 7. Reload Your App
-Click the **Reload** button on the Web tab.
+3. Click **Save**
 
-### 8. Test
-Visit: `https://yourusername.pythonanywhere.com/docs`
+> ⚠️ Replace `yourusername` with your actual username
 
-You should see the Swagger API docs!
+---
+
+## Step 7: Add Environment Variables (Web tab)
+
+1. Scroll down to **"Environment variables"** section
+2. Click **"Add a new variable"** for each one below
+3. Add these **exactly**:
+
+### Required Variables
+
+| # | Key | Value | Notes |
+|---|-----|-------|-------|
+| 1 | `DATABASE_URL` | `sqlite+aiosqlite:///./coderithm_events.db` | SQLite database |
+| 2 | `SECRET_KEY` | *(see below)* | JWT secret key |
+| 3 | `DEBUG` | `False` | Disable debug mode |
+| 4 | `FRONTEND_URL` | `https://yourusername.pythonanywhere.com` | Your app URL |
+| 5 | `APP_URL` | `https://yourusername.pythonanywhere.com` | Your app URL |
+
+### Optional Variables (add later if needed)
+
+| # | Key | Value | Notes |
+|---|-----|-------|-------|
+| 6 | `RESEND_API_KEY` | *(from resend.com)* | For email notifications |
+| 7 | `CLOUDINARY_CLOUD_NAME` | *(from cloudinary.com)* | For banner uploads |
+| 8 | `CLOUDINARY_API_KEY` | *(from cloudinary.com)* | For banner uploads |
+| 9 | `CLOUDINARY_API_SECRET` | *(from cloudinary.com)* | For banner uploads |
+
+### How to Generate SECRET_KEY
+
+Run this in Bash console to generate a random key:
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+Copy the output and paste it as the value for `SECRET_KEY`.
+
+---
+
+## Step 8: Final Settings (Web tab)
+
+| Setting | Value |
+|---------|-------|
+| **Python file** | `/home/yourusername/mysite/backend/wsgi.py` |
+| **Working directory** | `/home/yourusername/mysite/backend` |
+| **Python version** | 3.10 |
+
+---
+
+## Step 9: Reload & Test
+
+1. Click the big green **"Reload"** button
+2. Wait 10-15 seconds
+3. Visit: `https://yourusername.pythonanywhere.com/docs`
+
+You should see Swagger API docs!
+
+---
+
+## Quick Visual Guide
+
+### Adding Env Vars (PythonAnywhere Dashboard)
+```
+Web Tab
+  └── Environment variables
+        ├── [Key]              [Value]
+        ├── DATABASE_URL    →  sqlite+aiosqlite:///./coderithm_events.db
+        ├── SECRET_KEY      →  abc123xyz...
+        ├── DEBUG           →  False
+        ├── FRONTEND_URL    →  https://yourusername.pythonanywhere.com
+        └── APP_URL         →  https://yourusername.pythonanywhere.com
+```
+
+---
+
+## Troubleshooting
+
+### Error: ModuleNotFoundError
+```
+ModuleNotFoundError: No module named 'app'
+```
+**Fix:** Make sure Source code points to `/home/yourusername/mysite/backend`
+
+---
+
+### Error: 502 Bad Gateway
+**Fix:** Check Error logs (Web tab → Logs section)
+- Usually means env vars are missing or WSGI path is wrong
+
+---
+
+### Error: Database not found
+**Fix:** Make sure `DATABASE_URL` env var is set exactly:
+```
+sqlite+aiosqlite:///./coderithm_events.db
+```
+
+---
+
+### Static files not loading
+**Fix:** In Web tab → **Static files**, add:
+| URL | Directory |
+|-----|-----------|
+| `/static/` | `/home/yourusername/mysite/backend/static` |
 
 ---
 
@@ -88,45 +181,52 @@ You should see the Swagger API docs!
 ~/mysite/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py
-│   │   ├── models/
-│   │   ├── schemas/
-│   │   ├── api/
-│   │   ├── services/
-│   │   └── core/
-│   ├── wsgi.py
+│   │   ├── main.py          ← FastAPI app
+│   │   ├── models/           ← Database models
+│   │   ├── schemas/          ← Pydantic schemas
+│   │   ├── api/v1/           ← API routes
+│   │   ├── services/         ← Business logic
+│   │   └── core/             ← Auth, email, QR
+│   ├── wsgi.py              ← WSGI entry point
 │   ├── requirements.txt
-│   └── .env
-└── venv/
+│   └── .env.example
+└── venv/                     ← Virtual environment
 ```
 
-## Troubleshooting
+---
 
-**Error: ModuleNotFoundError**
-- Make sure `Source code` in Web tab points to `~/mysite/backend`
+## Free Tier Limits
+- App sleeps after **30 min** idle (wakes in ~5 sec on first request)
+- **No Celery/Redis** (email still works via Resend API)
+- **512 MB** storage
+- **100 seconds** CPU/day
+- Your app URL: `https://yourusername.pythonanywhere.com`
 
-**Error: Database not found**
-- Check `DATABASE_URL` environment variable is set correctly
+---
 
-**Static files not loading**
-- Add to Web tab → Static files:
-  - URL: `/static/`
-  - Directory: `/home/yourusername/mysite/backend/static`
+## Frontend Integration
 
-**502 Bad Gateway**
-- Check Error logs in Web tab
-- Make sure all environment variables are set
+Your frontend team deploys on **Vercel** or **Netlify** (free).
 
-## Limitations (Free Tier)
-- App sleeps after 30 min of inactivity (wakes on first request, ~5-10 sec)
-- No background tasks (Celery won't work — skip Redis/Celery on free tier)
-- 512 MB storage limit
-- CPU: 100 seconds/day
+Set this in frontend `.env.production`:
+```bash
+# For Vite/React
+VITE_API_URL=https://yourusername.pythonanywhere.com
 
-## Notes for Your Team (Frontend Integration)
-The API base URL for your frontend will be:
-```
-https://yourusername.pythonanywhere.com/api/v1/
+# For Next.js
+NEXT_PUBLIC_API_URL=https://yourusername.pythonanywhere.com
 ```
 
-All endpoints work the same as local. Just change the base URL in your frontend API config.
+Then call API like:
+```javascript
+const res = await fetch(`${API_URL}/api/v1/events`);
+```
+
+---
+
+## After Deploy Checklist
+- [ ] Visit `https://yourusername.pythonanywhere.com/docs` → Swagger loads
+- [ ] Visit `https://yourusername.pythonanywhere.com/health` → returns `{"status":"ok"}`
+- [ ] Test register: POST to `/api/v1/auth/register`
+- [ ] Test login: POST to `/api/v1/auth/login`
+- [ ] Test events: GET to `/api/v1/events`
