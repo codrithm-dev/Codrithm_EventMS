@@ -1,19 +1,29 @@
+import logging
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.config import get_settings
-from app.database import engine, Base
 from app.core.middleware import setup_middleware
 from app.api.v1.router import api_router
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    try:
+        from app.database import engine, Base
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Database setup error: {e}")
     yield
-    await engine.dispose()
+    try:
+        from app.database import engine
+        await engine.dispose()
+    except Exception:
+        pass
 
 
 def create_app() -> FastAPI:

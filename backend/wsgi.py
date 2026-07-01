@@ -1,19 +1,23 @@
 """
 PythonAnywhere WSGI entry point.
-Path: /home/yourusername/mysite/wsgi.py
 """
 import sys
 import os
 
-# Add your project directory to sys.path
-project_home = os.path.expanduser("~/mysite")
+project_home = '/home/codrithm/ems/backend'
 if project_home not in sys.path:
     sys.path.insert(0, project_home)
 
-# Set environment variables
-os.environ.setdefault("DATABASE_URL", "sqlite:///./coderithm_events.db")
-os.environ.setdefault("SECRET_KEY", "change-this-in-production")
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:////home/codrithm/ems/backend/coderithm_events.db")
+os.environ.setdefault("SECRET_KEY", os.environ.get("SECRET_KEY", "CHANGE-ME"))
 os.environ.setdefault("DEBUG", "False")
+os.environ.setdefault("FRONTEND_URL", "https://codrithm.pythonanywhere.com")
+os.environ.setdefault("APP_URL", "https://codrithm.pythonanywhere.com")
+
+import sqlite3
+db_path = '/home/codrithm/ems/backend/coderithm_events.db'
+if not os.path.exists(db_path):
+    open(db_path, 'w').close()
 
 from a2wsgi import ASGIMiddleware
 from app.main import app
