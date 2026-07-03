@@ -1,0 +1,13 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft, Calendar, Check, Clock, MapPin, Share2, Ticket, Users } from "lucide-react";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { events } from "@/lib/data";
+
+export default async function EventDetail({ params }: { params: Promise<{slug:string}> }) {
+  const {slug}=await params; const event=events.find(e=>e.slug===slug); if(!event) notFound();
+  return <main><Navbar/><section className={`detail-cover ${event.color}`}><Link href="/events" className="back-link"><ArrowLeft size={17}/> All events</Link><span className="detail-symbol">{event.icon}</span><div className="cover-date"><b>{event.date.split(" ")[0]}</b><span>{event.date.split(" ")[1]}</span></div></section>
+  <section className="detail-layout"><article><span className="eyebrow">{event.category}</span><h1>{event.title}</h1><p className="detail-lead">An inspiring gathering designed to spark new ideas, meaningful conversations, and the kind of memories that stay with you.</p><div className="host-row"><span>EP</span><div><small>Hosted by</small><b>Evently Pakistan</b></div><button><Share2 size={17}/> Share</button></div><hr/><h2>About this event</h2><p>Step away from the everyday and into a room full of possibility. We’re bringing together a thoughtful mix of creators, leaders, and curious minds for an experience built around connection—not small talk.</p><p>Expect carefully designed sessions, good company, and plenty of moments that surprise you. Come as you are. Leave with something new.</p><div className="included"><h3>What’s included</h3>{["Full event access","Refreshments & snacks","Networking session","Digital resources"].map(x=><span key={x}><Check size={16}/>{x}</span>)}</div></article>
+  <aside className="booking-card"><h3>Your ticket</h3><div className="booking-row"><Calendar/><span><small>Date</small><b>{event.date}, 2026</b></span></div><div className="booking-row"><Clock/><span><small>Time</small><b>{event.time}</b></span></div><div className="booking-row"><MapPin/><span><small>Venue</small><b>{event.location}</b></span></div><div className="booking-row"><Users/><span><small>Community</small><b>{event.attendees} attending</b></span></div><hr/><div className="price-row"><span>From</span><b>Rs {event.price.toLocaleString()}</b></div><Link href={`/events/${event.slug}/register`} className="button button-coral"><Ticket size={18}/> Reserve your spot</Link><small className="secure-note">No hidden fees · Secure checkout</small></aside></section><Footer/></main>
+}

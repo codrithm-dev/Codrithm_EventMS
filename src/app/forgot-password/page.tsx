@@ -1,0 +1,3 @@
+import Link from "next/link";
+import { ArrowLeft, ArrowRight, Mail } from "lucide-react";
+export default function ForgotPassword(){return <main className="simple-auth"><Link href="/" className="brand"><span className="brand-mark">e</span>evently</Link><div className="auth-form"><span className="large-icon"><Mail/></span><h2>Reset your password.</h2><p>Enter your email and we’ll send you a secure reset link.</p><label>Email address<span className="input-icon"><Mail size={18}/><input type="email" placeholder="you@example.com"/></span></label><button className="button button-dark submit-button">Send reset link <ArrowRight size={18}/></button><Link href="/login" className="back-link"><ArrowLeft size={17}/> Back to sign in</Link></div></main>}
