@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/* ─── Dark mode via class strategy (Tailwind v4) ─────────────────────── */
+@custom-variant dark (&:is(.dark *));
+
+/* ─── Design tokens ──────────────────────────────────────────────────── */
+:root {
+  /* Brand (same in both modes) */
+  --color-primary-blue: #0066ff;
+  --color-accent-green: #87ffbc;
+
+  /* Light mode surface */
+  --color-background: #ffffff;
+  --color-surface: #f5f6f8;
+  --color-text-primary: #0a0a0f;
+  --color-text-secondary: #4b5563;
+  --color-border: rgba(0, 0, 0, 0.1);
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+.dark {
+  --color-background: #0a0a0f;
+  --color-surface: #13131a;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #9ca3af;
+  --color-border: rgba(255, 255, 255, 0.1);
+}
+
+/* ─── Tailwind v4 theme registration ─────────────────────────────────── */
+@theme inline {
+  /* Semantic colors wired to CSS variables */
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-border-default: var(--color-border);
+  --color-primary-blue: var(--color-primary-blue);
+  --color-accent-green: var(--color-accent-green);
+
+  /* Font stack */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ─── Base styles ─────────────────────────────────────────────────────── */
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans, Arial, Helvetica, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
