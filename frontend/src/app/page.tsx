@@ -1,6 +1,11 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Calendar, Users, Ticket, Code, Brain, Briefcase, Mic, Globe, Zap } from "lucide-react";
+import { Calendar, Users, Ticket, Code, Brain, Briefcase, Mic, Globe, Zap, Coffee, type LucideIcon } from "lucide-react";
 import EventCard, { type EventCardProps } from "@/components/EventCard";
+import { api, ApiClientError } from "@/lib/api";
+import type { EventListItem, PaginatedEvents } from "@/types";
 
 const STATS = [
   { value: "50+", label: "Events Hosted" },
@@ -14,85 +19,60 @@ const ICON_BADGES = [
   { icon: Ticket, bg: "rgba(0,102,255,0.08)", color: "#0066ff", label: "Tickets" },
 ];
 
-const EVENTS: EventCardProps[] = [
-  {
-    slug: "web-dev-workshop-2026",
-    title: "Full-Stack Web Dev Workshop",
-    category: "Workshop",
-    categoryColor: "#0066ff",
-    date: "Sat, Jul 12 · 10:00 AM",
-    venue: "Tech Hub, Lahore",
-    registeredCount: 42,
-    capacity: 60,
-    bannerIcon: Code,
-    bannerGradient: "linear-gradient(135deg, #0066ff 0%, #0044cc 100%)",
-  },
-  {
-    slug: "ai-meetup-july",
-    title: "AI & Machine Learning Meetup",
-    category: "Meetup",
-    categoryColor: "#87ffbc",
-    date: "Wed, Jul 16 · 6:00 PM",
-    venue: "The Nest, Karachi",
-    registeredCount: 78,
-    capacity: 100,
-    bannerIcon: Brain,
-    bannerGradient: "linear-gradient(135deg, #00c97a 0%, #007a50 100%)",
-  },
-  {
-    slug: "career-fair-2026",
-    title: "Tech Career Fair 2026",
-    category: "Career",
-    categoryColor: "#f59e0b",
-    date: "Fri, Jul 18 · 9:00 AM",
-    venue: "FAST University, Islamabad",
-    registeredCount: 210,
-    capacity: 300,
-    bannerIcon: Briefcase,
-    bannerGradient: "linear-gradient(135deg, #f59e0b 0%, #b45309 100%)",
-  },
-  {
-    slug: "startup-pitch-night",
-    title: "Startup Pitch Night",
-    category: "Networking",
-    categoryColor: "#ec4899",
-    date: "Tue, Jul 22 · 7:00 PM",
-    venue: "Plan9, Lahore",
-    registeredCount: 55,
-    capacity: 80,
-    bannerIcon: Mic,
-    bannerGradient: "linear-gradient(135deg, #ec4899 0%, #9d174d 100%)",
-  },
-  {
-    slug: "open-source-summit",
-    title: "Open Source Summit Pakistan",
-    category: "Conference",
-    categoryColor: "#8b5cf6",
-    date: "Sat, Jul 26 · 9:00 AM",
-    venue: "NUST, Islamabad",
-    registeredCount: 180,
-    capacity: 250,
-    bannerIcon: Globe,
-    bannerGradient: "linear-gradient(135deg, #8b5cf6 0%, #5b21b6 100%)",
-  },
-  {
-    slug: "hackathon-Codrithm-2026",
-    title: "Codrithm Hackathon 2026",
-    category: "Hackathon",
-    categoryColor: "#0066ff",
-    date: "Fri–Sat, Aug 1–2 · 8:00 AM",
-    venue: "Arfa Tower, Lahore",
-    registeredCount: 95,
-    capacity: 120,
-    bannerIcon: Zap,
-    bannerGradient: "linear-gradient(135deg, #0066ff 0%, #87ffbc 100%)",
-  },
-];
+const categoryIcons: Record<string, LucideIcon> = {
+  Workshop: Code, Meetup: Brain, Conference: Globe,
+  Hackathon: Zap, Career: Briefcase, Networking: Mic,
+  Competition: Code, Bootcamp: Code, Social: Coffee,
+};
+
+const categoryColors: Record<string, string> = {
+  Workshop: "#0066ff", Meetup: "#87ffbc", Conference: "#8b5cf6",
+  Hackathon: "#0066ff", Career: "#f59e0b", Networking: "#ec4899",
+  Competition: "#f59e0b", Bootcamp: "#6366f1", Social: "#92400e",
+};
+
+function getCategoryIcon(cat: string): LucideIcon {
+  return categoryIcons[cat] || Code;
+}
+function getCategoryColor(cat: string): string {
+  return categoryColors[cat] || "#0066ff";
+}
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+}
 
 export default function HomePage() {
+  const [events, setEvents] = useState<EventListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await api.get<PaginatedEvents>("/events?limit=6&status=published", true);
+        setEvents(data.items);
+      } catch (e) {
+        console.error("Failed to load events", e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const toCardProps = (e: EventListItem): EventCardProps => ({
+    slug: e.slug,
+    title: e.title,
+    category: e.category,
+    categoryColor: getCategoryColor(e.category),
+    date: formatDate(e.date_time),
+    venue: e.venue || "Online",
+    registeredCount: e.registered_count || 0,
+    capacity: e.capacity,
+    bannerIcon: getCategoryIcon(e.category),
+    bannerGradient: `linear-gradient(135deg, ${getCategoryColor(e.category)} 0%, ${getCategoryColor(e.category)}cc 100%)`,
+  });
+
   return (
     <main className="flex-1 flex flex-col">
-      {/* Hero */}
       <section className="relative flex flex-col items-center justify-center text-center px-4 py-24 sm:py-32 overflow-hidden">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full opacity-30" style={{ background: "radial-gradient(circle, #0066ff 0%, transparent 70%)", filter: "blur(80px)" }} />
@@ -138,40 +118,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Upcoming events */}
       <section className="px-4 sm:px-6 lg:px-8 pb-24">
         <div className="mx-auto max-w-7xl">
-          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-8">
-            Upcoming events
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {EVENTS.map((event) => (
-              <EventCard key={event.slug} {...event} />
-            ))}
-          </div>
-
-          <div className="flex justify-center">
-            <Link
-              href="/events"
-              className="
-                inline-flex items-center
-                px-7 py-3
-                text-base font-semibold
-                text-[var(--color-text-primary)]
-                border border-[var(--color-border)]
-                hover:border-[var(--color-primary-blue)]
-                hover:text-[var(--color-primary-blue)]
-                bg-transparent rounded-full
-                transition duration-150
-              "
-            >
-              View all events →
-            </Link>
-          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-8">Upcoming events</h2>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl h-72 animate-pulse" />
+              ))}
+            </div>
+          ) : events.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {events.map((event) => (
+                  <EventCard key={event.slug || event.id} {...toCardProps(event)} />
+                ))}
+              </div>
+              <div className="flex justify-center">
+                <Link href="/events" className="inline-flex items-center px-7 py-3 text-base font-semibold text-[var(--color-text-primary)] border border-[var(--color-border)] hover:border-[var(--color-primary-blue)] hover:text-[var(--color-primary-blue)] bg-transparent rounded-full transition duration-150">
+                  View all events →
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl">
+              <p className="text-[var(--color-text-secondary)]">No events available right now. Check back soon!</p>
+            </div>
+          )}
         </div>
       </section>
     </main>
   );
 }
-
-

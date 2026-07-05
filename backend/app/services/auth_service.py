@@ -48,19 +48,23 @@ async def login_user(db: AsyncSession, email: str, password: str) -> dict:
         raise UnauthorizedException("Invalid email or password")
 
     return {
-        "access_token": create_access_token(user.id),
+        "access_token": create_access_token(user.id, user.role.value if hasattr(user.role, 'value') else str(user.role)),
         "refresh_token": create_refresh_token(user.id),
         "user": user,
     }
 
 
-async def refresh_tokens(refresh_token: str) -> dict:
+async def refresh_tokens(db: AsyncSession, refresh_token: str) -> dict:
     payload = decode_token(refresh_token)
     if not payload or payload.get("type") != "refresh":
         raise UnauthorizedException("Invalid refresh token")
     user_id = payload.get("sub")
+    # Fetch user to get current role
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    role = user.role.value if user and hasattr(user.role, 'value') else "user"
     return {
-        "access_token": create_access_token(user_id),
+        "access_token": create_access_token(user_id, role),
         "refresh_token": create_refresh_token(user_id),
     }
 
