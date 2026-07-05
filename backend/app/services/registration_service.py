@@ -16,7 +16,11 @@ async def register_for_event(db: AsyncSession, user_id: str, event_id: str, data
         raise NotFoundException("Event")
     if event.status != EventStatus.published:
         raise ConflictException("Event is not open for registration")
-    if datetime.now(timezone.utc) > event.registration_deadline:
+    now = datetime.now(timezone.utc)
+    deadline = event.registration_deadline
+    if deadline.tzinfo is None:
+        deadline = deadline.replace(tzinfo=timezone.utc)
+    if now > deadline:
         raise DeadlinePassedException()
 
     existing = await db.execute(
