@@ -5,13 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
-import { Menu, X, LayoutDashboard, Calendar, Ticket, User, LogOut, Shield } from "lucide-react";
+import { Menu, X, LayoutDashboard, Calendar, Ticket, User, LogOut, Shield, Bell } from "lucide-react";
 import { isAuthenticated, getStoredUser, logout } from "@/lib/auth";
+import { api } from "@/lib/api";
 import type { User as UserType } from "@/types";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -21,6 +23,14 @@ export default function Navbar() {
 
   const authed = mounted && isAuthenticated();
   const user: UserType | null = mounted ? getStoredUser() : null;
+
+  useEffect(() => {
+    if (authed) {
+      api.get<{ count: number }>("/notifications/unread-count").then((data) => {
+        setUnreadCount(data.count);
+      }).catch(() => {});
+    }
+  }, [authed]);
 
   const handleLogout = () => {
     logout();
@@ -104,6 +114,14 @@ export default function Navbar() {
 
             {authed ? (
               <div className="hidden sm:flex items-center gap-3">
+                <Link href="/notifications" className="relative p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors duration-150">
+                  <Bell size={18} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
                 <Link
                   href="/profile"
                   className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors duration-150"
@@ -182,6 +200,13 @@ export default function Navbar() {
 
             {authed ? (
               <>
+                <Link href="/notifications" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface)] transition-colors duration-150">
+                  <Bell size={14} />
+                  Notifications
+                  {unreadCount > 0 && (
+                    <span className="ml-auto w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{unreadCount}</span>
+                  )}
+                </Link>
                 <div className="pt-2 px-3 flex items-center gap-2 text-sm text-[var(--color-text-secondary)] border-t border-[var(--color-border)] mt-1">
                   <User size={14} />
                   {user?.full_name || "User"}

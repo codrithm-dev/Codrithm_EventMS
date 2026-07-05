@@ -13,6 +13,18 @@ settings = get_settings()
 verification_tokens: dict[str, str] = {}
 
 
+def _reset_password_html(name: str, token: str) -> str:
+    link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+    return f"""
+    <h2>Password Reset</h2>
+    <p>Hi {name},</p>
+    <p>We received a request to reset your password. Click the link below:</p>
+    <a href="{link}" style="background:#4F46E5;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Reset Password</a>
+    <p>If you didn't request this, please ignore this email.</p>
+    <p>This link expires in 1 hour.</p>
+    """
+
+
 async def register_user(db: AsyncSession, full_name: str, email: str, password: str) -> User:
     result = await db.execute(select(User).where(User.email == email))
     if result.scalar_one_or_none():
@@ -88,8 +100,11 @@ async def forgot_password(db: AsyncSession, email: str) -> None:
     if user:
         token = secrets.token_urlsafe(32)
         verification_tokens[token] = user.id
-        # In production, send email with reset link
-        # For now, we just silently succeed
+        await send_email(
+            to=email,
+            subject=f"Reset your password - {settings.APP_NAME}",
+            html=_reset_password_html(user.full_name, token),
+        )
     # Always return None to prevent email enumeration
 
 

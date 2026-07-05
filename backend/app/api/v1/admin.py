@@ -56,6 +56,7 @@ async def update_user_role(
 @router.get("/dashboard/export/{event_id}")
 async def export_registrations(
     event_id: str,
+    fields: str = None,
     user: User = Depends(get_current_organizer),
     db: AsyncSession = Depends(get_db),
 ):
@@ -64,17 +65,32 @@ async def export_registrations(
     )
     registrations = result.scalars().all()
 
+    all_columns = {
+        "full_name": ("Name", lambda r: r.full_name),
+        "email": ("Email", lambda r: r.email),
+        "phone": ("Phone", lambda r: r.phone or ""),
+        "status": ("Status", lambda r: r.status),
+        "ticket_id": ("Ticket ID", lambda r: r.ticket_id or ""),
+        "registered_at": ("Registered At", lambda r: r.registered_at.isoformat()),
+        "linkedin_url": ("LinkedIn", lambda r: r.linkedin_url or ""),
+        "github_url": ("GitHub", lambda r: r.github_url or ""),
+        "university": ("University", lambda r: r.university or ""),
+        "company": ("Company", lambda r: r.company or ""),
+        "job_title": ("Job Title", lambda r: r.job_title or ""),
+        "portfolio_url": ("Portfolio", lambda r: r.portfolio_url or ""),
+    }
+
+    if fields:
+        selected = [f.strip() for f in fields.split(",") if f.strip() in all_columns]
+    else:
+        selected = list(all_columns.keys())
+
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Name", "Email", "Phone", "Status", "Ticket ID", "Registered At", "LinkedIn", "GitHub", "University", "Company"])
+    writer.writerow([all_columns[k][0] for k in selected])
 
     for reg in registrations:
-        writer.writerow([
-            reg.full_name, reg.email, reg.phone or "", reg.status,
-            reg.ticket_id or "", reg.registered_at.isoformat(),
-            reg.linkedin_url or "", reg.github_url or "",
-            reg.university or "", reg.company or "",
-        ])
+        writer.writerow([all_columns[k][1](reg) for k in selected])
 
     output.seek(0)
     return StreamingResponse(

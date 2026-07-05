@@ -8,6 +8,7 @@ class NotificationResponse(BaseModel):
     type: str
     title: str
     message: str
+    is_read: bool
     status: str
     sent_at: Optional[datetime] = None
     created_at: datetime
@@ -20,3 +21,4 @@ class PaginatedNotifications(BaseModel):
     total: int
     page: int
     pages: int
+    unread_count: int = 0

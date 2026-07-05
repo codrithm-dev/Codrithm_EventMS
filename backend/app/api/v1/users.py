@@ -25,4 +25,12 @@ async def update_me(
         user.full_name = data.full_name
     if data.avatar_url is not None:
         user.avatar_url = data.avatar_url
+    if data.bio is not None:
+        user.bio = data.bio
+    if data.linkedin_url is not None:
+        user.linkedin_url = data.linkedin_url
+    if data.github_url is not None:
+        user.github_url = data.github_url
+    if data.portfolio_url is not None:
+        user.portfolio_url = data.portfolio_url
     return user

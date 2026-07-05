@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiClientError } from "@/lib/api";
+import { setStoredUser, getStoredUser } from "@/lib/auth";
 import type { User } from "@/types";
 
 const inputCls = `
@@ -25,23 +26,43 @@ const disabledInputCls = `
   cursor-not-allowed outline-none
 `.trim();
 
+const labelCls = "text-sm font-medium text-[var(--color-text-primary)]";
+const fieldCls = "flex flex-col gap-1.5";
+
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [fullName, setFullName] = useState("");
+  const [bio, setBio] = useState("");
   const [linkedin, setLinkedin] = useState("");
   const [github, setGithub] = useState("");
+  const [portfolio, setPortfolio] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
+    const stored = getStoredUser<User>();
+    if (stored) {
+      setUser(stored);
+      setFullName(stored.full_name);
+      setBio(stored.bio || "");
+      setLinkedin(stored.linkedin_url || "");
+      setGithub(stored.github_url || "");
+      setPortfolio(stored.portfolio_url || "");
+    }
+
     (async () => {
       try {
         const data = await api.get<User>("/users/me");
         setUser(data);
         setFullName(data.full_name);
+        setBio(data.bio || "");
+        setLinkedin(data.linkedin_url || "");
+        setGithub(data.github_url || "");
+        setPortfolio(data.portfolio_url || "");
+        setStoredUser(data as unknown as Record<string, unknown>);
       } catch (err) {
         if (err instanceof ApiClientError) setError(err.detail);
         else setError("Failed to load profile");
@@ -58,8 +79,15 @@ export default function ProfilePage() {
     setSaving(true);
 
     try {
-      const updated = await api.put<User>("/users/me", { full_name: fullName });
+      const updated = await api.put<User>("/users/me", {
+        full_name: fullName,
+        bio: bio || null,
+        linkedin_url: linkedin || null,
+        github_url: github || null,
+        portfolio_url: portfolio || null,
+      });
       setUser(updated);
+      setStoredUser(updated as unknown as Record<string, unknown>);
       setSuccess("Profile updated successfully");
     } catch (err) {
       if (err instanceof ApiClientError) setError(err.detail);
@@ -90,19 +118,41 @@ export default function ProfilePage() {
             <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-extrabold text-white select-none bg-gradient-to-br from-[var(--color-primary-blue)] to-[var(--color-accent-green)]" aria-label="Profile avatar">
               {user?.full_name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "U"}
             </div>
+            <p className="text-xs text-[var(--color-text-secondary)]">{user?.role}</p>
           </div>
 
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-[var(--color-text-primary)]" htmlFor="full-name">Full name</label>
+            <div className={fieldCls}>
+              <label className={labelCls} htmlFor="full-name">Full name</label>
               <input id="full-name" type="text" autoComplete="name" className={inputCls} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
             </div>
 
-            <div className="flex flex-col gap-1.5">
+            <div className={fieldCls}>
               <label className="text-sm font-medium text-[var(--color-text-secondary)]" htmlFor="email">
                 Email <span className="text-xs font-normal">(cannot be changed)</span>
               </label>
               <input id="email" type="email" value={user?.email || ""} disabled readOnly className={disabledInputCls} />
+            </div>
+
+            <div className={fieldCls}>
+              <label className={labelCls} htmlFor="bio">Bio</label>
+              <textarea id="bio" rows={3} placeholder="Tell us about yourself..." className={`${inputCls} resize-y`} value={bio} onChange={(e) => setBio(e.target.value)} />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className={fieldCls}>
+                <label className={labelCls} htmlFor="linkedin_url">LinkedIn URL</label>
+                <input id="linkedin_url" type="url" placeholder="https://linkedin.com/in/you" className={inputCls} value={linkedin} onChange={(e) => setLinkedin(e.target.value)} />
+              </div>
+              <div className={fieldCls}>
+                <label className={labelCls} htmlFor="github_url">GitHub URL</label>
+                <input id="github_url" type="url" placeholder="https://github.com/you" className={inputCls} value={github} onChange={(e) => setGithub(e.target.value)} />
+              </div>
+            </div>
+
+            <div className={fieldCls}>
+              <label className={labelCls} htmlFor="portfolio_url">Portfolio URL</label>
+              <input id="portfolio_url" type="url" placeholder="https://yourportfolio.com" className={inputCls} value={portfolio} onChange={(e) => setPortfolio(e.target.value)} />
             </div>
 
             {error && <p className="text-sm text-red-500 bg-red-500/10 rounded-xl px-4 py-2">{error}</p>}

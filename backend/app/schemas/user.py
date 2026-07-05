@@ -8,6 +8,10 @@ class UserResponse(BaseModel):
     full_name: str
     email: str
     avatar_url: Optional[str] = None
+    bio: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    portfolio_url: Optional[str] = None
     role: str
     is_verified: bool
     created_at: datetime
@@ -18,6 +22,10 @@ class UserResponse(BaseModel):
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
+    bio: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    portfolio_url: Optional[str] = None
 
 
 class AdminUserUpdate(BaseModel):

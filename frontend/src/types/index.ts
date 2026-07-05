@@ -3,6 +3,10 @@ export interface User {
   full_name: string;
   email: string;
   avatar_url: string | null;
+  bio: string | null;
+  linkedin_url: string | null;
+  github_url: string | null;
+  portfolio_url: string | null;
   role: "guest" | "user" | "organizer" | "admin";
   is_verified: boolean;
   created_at: string;
@@ -11,6 +15,10 @@ export interface User {
 export interface UserUpdate {
   full_name?: string;
   avatar_url?: string;
+  bio?: string;
+  linkedin_url?: string;
+  github_url?: string;
+  portfolio_url?: string;
 }
 
 export interface AuthTokens {
@@ -181,6 +189,7 @@ export interface NotificationResponse {
   type: string;
   title: string;
   message: string;
+  is_read: boolean;
   status: string;
   sent_at: string | null;
   created_at: string;
@@ -191,6 +200,7 @@ export interface PaginatedNotifications {
   total: number;
   page: number;
   pages: number;
+  unread_count: number;
 }
 
 export interface PlatformAnalytics {

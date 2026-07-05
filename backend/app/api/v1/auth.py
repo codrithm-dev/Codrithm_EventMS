@@ -1,21 +1,24 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.auth import RegisterRequest, LoginRequest, TokenResponse, RefreshRequest, ForgotPasswordRequest, ResetPasswordRequest
 from app.schemas.user import UserResponse
 from app.services import auth_service
+from app.core.rate_limit import rate_limit
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/register", response_model=UserResponse)
-async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
+@rate_limit(max_requests=5, window_seconds=60)
+async def register(request: Request, data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     user = await auth_service.register_user(db, data.full_name, data.email, data.password)
     return user
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
+@rate_limit(max_requests=10, window_seconds=60)
+async def login(request: Request, data: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await auth_service.login_user(db, data.email, data.password)
     return {
         "access_token": result["access_token"],
@@ -36,12 +39,14 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/forgot-password")
-async def forgot_password(data: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+@rate_limit(max_requests=3, window_seconds=300)
+async def forgot_password(request: Request, data: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
     await auth_service.forgot_password(db, data.email)
     return {"message": "If the email exists, a reset link has been sent"}
 
 
 @router.post("/reset-password")
-async def reset_password(data: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
+@rate_limit(max_requests=5, window_seconds=300)
+async def reset_password(request: Request, data: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
     await auth_service.reset_password(db, data.token, data.new_password)
     return {"message": "Password reset successfully"}

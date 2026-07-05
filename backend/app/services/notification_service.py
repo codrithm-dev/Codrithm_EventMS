@@ -89,6 +89,14 @@ async def get_user_notifications(db: AsyncSession, user_id: str, page: int = 1, 
     total_result = await db.execute(count_query)
     total = total_result.scalar()
 
+    unread_result = await db.execute(
+        select(func.count(Notification.id)).where(
+            Notification.user_id == user_id,
+            Notification.is_read == False,
+        )
+    )
+    unread_count = unread_result.scalar()
+
     query = (
         select(Notification)
         .where(Notification.user_id == user_id)
@@ -104,4 +112,5 @@ async def get_user_notifications(db: AsyncSession, user_id: str, page: int = 1, 
         "total": total,
         "page": page,
         "pages": math.ceil(total / limit) if total else 0,
+        "unread_count": unread_count,
     }
