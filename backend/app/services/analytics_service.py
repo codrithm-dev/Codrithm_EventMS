@@ -23,10 +23,16 @@ async def get_platform_analytics(db: AsyncSession) -> dict:
     attendance_rate = (total_checked_in / total_approved * 100) if total_approved > 0 else 0
 
     # Recent registrations (last 30 days)
-    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
     recent_registrations = (await db.execute(
         select(func.count(Registration.id)).where(Registration.registered_at >= thirty_days_ago)
     )).scalar()
+
+    # Events by category
+    category_rows = (await db.execute(
+        select(Event.category, func.count(Event.id)).group_by(Event.category)
+    )).all()
+    events_by_category = {row[0]: row[1] for row in category_rows}
 
     return {
         "total_users": total_users,
@@ -38,6 +44,7 @@ async def get_platform_analytics(db: AsyncSession) -> dict:
         "approval_rate": round(approval_rate, 1),
         "attendance_rate": round(attendance_rate, 1),
         "recent_registrations": recent_registrations,
+        "events_by_category": events_by_category,
     }
 
 
