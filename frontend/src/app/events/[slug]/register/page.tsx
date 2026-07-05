@@ -177,17 +177,17 @@ export default function RegisterForEventPage({ params }: Props) {
                   <input id="job-title" type="text" placeholder="e.g. Software Engineer" autoComplete="organization-title" className={inputCls} value={formData.job_title || ""} onChange={handleChange} />
                 </div>
                 <div className={fieldCls}>
-                  <label className={labelCls} htmlFor="linkedin">LinkedIn profile</label>
-                  <input id="linkedin" type="url" placeholder="https://linkedin.com/in/you" className={inputCls} value={formData.linkedin_url || ""} onChange={handleChange} />
+                  <label className={labelCls} htmlFor="linkedin_url">LinkedIn profile</label>
+                  <input id="linkedin_url" type="url" placeholder="https://linkedin.com/in/you" className={inputCls} value={formData.linkedin_url || ""} onChange={handleChange} />
                 </div>
                 <div className={fieldCls}>
-                  <label className={labelCls} htmlFor="github">GitHub profile</label>
-                  <input id="github" type="url" placeholder="https://github.com/you" className={inputCls} value={formData.github_url || ""} onChange={handleChange} />
+                  <label className={labelCls} htmlFor="github_url">GitHub profile</label>
+                  <input id="github_url" type="url" placeholder="https://github.com/you" className={inputCls} value={formData.github_url || ""} onChange={handleChange} />
                 </div>
               </div>
               <div className={fieldCls}>
-                <label className={labelCls} htmlFor="portfolio">Portfolio URL</label>
-                <input id="portfolio" type="url" placeholder="https://yourportfolio.com" className={inputCls} value={formData.portfolio_url || ""} onChange={handleChange} />
+                <label className={labelCls} htmlFor="portfolio_url">Portfolio URL</label>
+                <input id="portfolio_url" type="url" placeholder="https://yourportfolio.com" className={inputCls} value={formData.portfolio_url || ""} onChange={handleChange} />
               </div>
             </section>
 
