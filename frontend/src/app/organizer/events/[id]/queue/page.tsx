@@ -38,7 +38,7 @@ export default function ApprovalQueuePage({ params }: Props) {
   const handleAction = async (registrationId: string, action: "approve" | "reject") => {
     setProcessing(registrationId);
     try {
-      await api.patch(`/registrations/${registrationId}/${action}`);
+      await api.patch(`/registrations/${registrationId}/${action}?event_id=${id}`);
       setApplicants((prev) => prev.filter((a) => a.id !== registrationId));
     } catch (err) {
       if (err instanceof ApiClientError) alert(err.detail);

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { use } from "react";
 import { Calendar, MapPin } from "lucide-react";
-import RegistrationStatusBadge from "@/components/RegistrationStatusBadge";
+import RegistrationStatusBadge, { type RegistrationStatus } from "@/components/RegistrationStatusBadge";
 import { api, ApiClientError } from "@/lib/api";
 import type { TicketResponse } from "@/types";
 
@@ -90,7 +90,7 @@ export default function TicketPage({ params }: Props) {
 
         <div className="w-full flex items-center justify-between">
           <span className="text-xs text-[var(--color-text-secondary)]">{ticket.attendee_name}</span>
-          <RegistrationStatusBadge status={ticket.status as "Approved" | "Pending" | "Rejected" | "Waitlisted" | "Cancelled"} />
+          <RegistrationStatusBadge status={ticket.status as RegistrationStatus} />
         </div>
 
         <button

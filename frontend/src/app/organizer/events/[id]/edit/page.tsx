@@ -47,7 +47,7 @@ export default function EditEventPage({ params }: Props) {
   useEffect(() => {
     (async () => {
       try {
-        const event = await api.get<EventDetail>(`/events/${id}`);
+        const event = await api.get<EventDetail>(`/events/id/${id}`);
         setTitle(event.title);
         setDescription(event.description);
         setCategory(event.category);

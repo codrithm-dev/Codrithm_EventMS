@@ -47,7 +47,7 @@ export default function RegistrationsPage({ params }: Props) {
 
   const handleExport = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/admin/dashboard/export/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/dashboard/export/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
       });
       if (!res.ok) throw new Error("Export failed");

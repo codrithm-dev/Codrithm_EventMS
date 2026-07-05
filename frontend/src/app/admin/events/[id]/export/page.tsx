@@ -45,7 +45,7 @@ export default function AdminEventExportPage({ params }: Props) {
     setExporting(true);
     try {
       const fields = Array.from(selectedFields).join(",");
-      const url = `http://localhost:8000/api/v1/admin/dashboard/export/${id}?format=${format}&fields=${fields}`;
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/admin/dashboard/export/${id}?format=${format}&fields=${fields}`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
       });

@@ -4,22 +4,31 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import EventStatusBadge, { type EventStatus } from "@/components/EventStatusBadge";
 import { api, ApiClientError } from "@/lib/api";
-import type { OrganizerDashboardSummary, EventListItem } from "@/types";
+
+interface DashboardEvent {
+  id: string;
+  title: string;
+  slug: string;
+  status: string;
+  date_time: string;
+  capacity: number;
+  registered: number;
+}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 export default function OrganizerDashboardPage() {
-  const [summary, setSummary] = useState<OrganizerDashboardSummary | null>(null);
+  const [events, setEvents] = useState<DashboardEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
-        const data = await api.get<OrganizerDashboardSummary>("/admin/dashboard/organizer/events");
-        setSummary(data);
+        const data = await api.get<DashboardEvent[]>("/admin/dashboard/organizer/events");
+        setEvents(Array.isArray(data) ? data : []);
       } catch (err) {
         if (err instanceof ApiClientError) setError(err.detail);
         else setError("Failed to load dashboard");
@@ -52,11 +61,12 @@ export default function OrganizerDashboardPage() {
     );
   }
 
+  const totalRegistrations = events.reduce((sum, e) => sum + (e.registered || 0), 0);
   const stats = [
-    { label: "Total events", value: String(summary?.total_events || 0) },
-    { label: "Total registrations", value: String(summary?.total_registrations || 0) },
-    { label: "Pending approvals", value: String(summary?.pending_approvals || 0) },
-    { label: "Check-in rate", value: `${Math.round((summary?.checkin_rate || 0) * 100)}%` },
+    { label: "Total events", value: String(events.length) },
+    { label: "Total registrations", value: String(totalRegistrations) },
+    { label: "Published", value: String(events.filter(e => e.status === "published").length) },
+    { label: "Drafts", value: String(events.filter(e => e.status === "draft").length) },
   ];
 
   return (
@@ -79,7 +89,7 @@ export default function OrganizerDashboardPage() {
         </div>
 
         <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">Your events</h2>
-        {summary?.recent_events && summary.recent_events.length > 0 ? (
+        {events.length > 0 ? (
           <div className="overflow-hidden rounded-2xl border border-[var(--color-border)]">
             <table className="w-full text-sm">
               <thead className="bg-[var(--color-surface)] border-b border-[var(--color-border)]">
@@ -92,12 +102,12 @@ export default function OrganizerDashboardPage() {
                 </tr>
               </thead>
               <tbody className="bg-[var(--color-background)] divide-y divide-[var(--color-border)]">
-                {summary.recent_events.map((e: EventListItem) => (
+                {events.map((e) => (
                   <tr key={e.id} className="hover:bg-[var(--color-surface)] transition-colors duration-100">
                     <td className="px-5 py-4 text-sm font-medium text-[var(--color-text-primary)]">{e.title}</td>
                     <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)] whitespace-nowrap">{formatDate(e.date_time)}</td>
                     <td className="px-5 py-4"><EventStatusBadge status={e.status as EventStatus} /></td>
-                    <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">{e.registered_count || 0}/{e.capacity}</td>
+                    <td className="px-5 py-4 text-sm text-[var(--color-text-secondary)]">{e.registered || 0}/{e.capacity}</td>
                     <td className="px-5 py-4 text-right">
                       <Link href={`/organizer/events/${e.id}/edit`} className="text-xs font-semibold text-[var(--color-primary-blue)] hover:underline">Manage →</Link>
                     </td>

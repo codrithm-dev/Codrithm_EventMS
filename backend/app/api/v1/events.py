@@ -32,6 +32,19 @@ async def my_events(
     return await event_service.get_organizer_events(db, user.id, page, limit)
 
 
+@router.get("/id/{event_id}", response_model=EventResponse)
+async def get_event_by_id(
+    event_id: str,
+    user: User = Depends(get_current_organizer),
+    db: AsyncSession = Depends(get_db),
+):
+    event = await event_service.get_event_by_id(db, event_id)
+    if event.organizer_id != user.id:
+        from app.core.exceptions import ForbiddenException
+        raise ForbiddenException()
+    return event
+
+
 @router.get("/{slug}", response_model=EventResponse)
 async def get_event(slug: str, db: AsyncSession = Depends(get_db)):
     event = await event_service.get_event_by_slug(db, slug)

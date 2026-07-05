@@ -7,7 +7,7 @@ import { Chrome, Github, Linkedin } from "lucide-react";
 import AuthCard from "@/components/AuthCard";
 import { api, ApiClientError } from "@/lib/api";
 import { setTokens, setStoredUser } from "@/lib/auth";
-import type { AuthTokens, User, RegisterRequest } from "@/types";
+import type { User, RegisterRequest } from "@/types";
 
 const inputCls = `
   w-full px-4 py-2.5 rounded-xl text-sm
@@ -49,8 +49,10 @@ export default function RegisterPage() {
 
     try {
       const payload: RegisterRequest = { full_name: fullName, email, password };
-      const tokens = await api.post<AuthTokens>("/auth/register", payload);
-      setTokens(tokens.access_token, tokens.refresh_token);
+      await api.post<User>("/auth/register", payload);
+
+      const loginResult = await api.post<{ access_token: string; refresh_token: string }>("/auth/login", { email, password });
+      setTokens(loginResult.access_token, loginResult.refresh_token);
 
       const user = await api.get<User>("/users/me");
       setStoredUser(user as unknown as Record<string, unknown>);

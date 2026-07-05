@@ -17,7 +17,7 @@ function VerifyEmailContent() {
     if (token) {
       (async () => {
         try {
-          await api.post("/auth/verify-email", { token }, true);
+          await api.post(`/auth/verify-email?token=${encodeURIComponent(token)}`, undefined, true);
           setMessage("Email verified successfully! Redirecting to login...");
           setTimeout(() => router.push("/login"), 2000);
         } catch (err) {
