@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, ChevronDown, Pencil, Trash2, X } from "lucide-react";
+import { Search, ChevronDown, Pencil, Trash2, X, Eye, ChevronRight } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api";
-import type { User } from "@/types";
+import type { User, AdminUserRegistration, AdminUserRegistrationsResponse } from "@/types";
 
 const ROLE_STYLES: Record<string, string> = {
   admin: "bg-purple-500/10 text-purple-400",
@@ -81,6 +81,93 @@ function EditUserModal({ user, onSave, onClose, saving }: EditModalProps) {
   );
 }
 
+interface RegistrationsModalProps {
+  userId: string;
+  userName: string;
+  onClose: () => void;
+}
+
+function UserRegistrationsModal({ userId, userName, onClose }: RegistrationsModalProps) {
+  const [registrations, setRegistrations] = useState<AdminUserRegistration[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await api.get<AdminUserRegistrationsResponse>(`/admin/users/${userId}/registrations`);
+        setRegistrations(data.items);
+      } catch (err) {
+        if (err instanceof ApiClientError) setError(err.detail);
+        else setError("Failed to load registrations");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [userId]);
+
+  const STATUS_STYLES: Record<string, string> = {
+    approved: "bg-emerald-500/10 text-emerald-400",
+    pending: "bg-yellow-500/10 text-yellow-400",
+    rejected: "bg-red-500/10 text-red-400",
+    waitlisted: "bg-blue-500/10 text-blue-400",
+    cancelled: "bg-gray-500/10 text-gray-400",
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-6 w-full max-w-lg mx-4 max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Registrations</h3>
+            <p className="text-xs text-[var(--color-text-secondary)]">{userName}</p>
+          </div>
+          <button onClick={onClose} className="p-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"><X size={18} /></button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="flex items-center justify-center py-10">
+              <div className="w-6 h-6 border-2 border-[var(--color-primary-blue)] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : error ? (
+            <p className="text-sm text-red-500 text-center py-10">{error}</p>
+          ) : registrations.length === 0 ? (
+            <p className="text-sm text-[var(--color-text-secondary)] text-center py-10">No registrations found</p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {registrations.map((reg) => (
+                <a
+                  key={reg.id}
+                  href={reg.event_slug ? `/events/${reg.event_slug}` : "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block bg-[var(--color-background)] border border-[var(--color-border)] rounded-xl px-4 py-3 hover:border-[var(--color-primary-blue)]/50 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-[var(--color-text-primary)] truncate">{reg.event_title}</p>
+                      <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                        {reg.event_date ? new Date(reg.event_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLES[reg.status] || STATUS_STYLES.pending}`}>
+                        {reg.status}
+                      </span>
+                      <ChevronRight size={14} className="text-[var(--color-text-secondary)]" />
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [total, setTotal] = useState(0);
@@ -91,6 +178,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [viewingRegistrations, setViewingRegistrations] = useState<User | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
@@ -222,6 +310,10 @@ export default function AdminUsersPage() {
                     <td className={`${tdCls} text-[var(--color-text-secondary)] whitespace-nowrap`}>{formatDate(u.created_at)}</td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => setViewingRegistrations(u)} title="View registrations"
+                          className="p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-accent-green)] hover:bg-[var(--color-accent-green)]/10 transition-colors duration-150 cursor-pointer">
+                          <Eye size={14} />
+                        </button>
                         <div className="relative">
                           <select value={u.role} onChange={(e) => handleRoleChange(u.id, e.target.value)}
                             className="appearance-none pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-blue)]/40 cursor-pointer">
@@ -262,6 +354,9 @@ export default function AdminUsersPage() {
                 </div>
                 <p className="text-xs text-[var(--color-text-secondary)]">Joined {formatDate(u.created_at)}</p>
                 <div className="flex items-center gap-2 pt-1">
+                  <button onClick={() => setViewingRegistrations(u)} className="p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-accent-green)] cursor-pointer">
+                    <Eye size={14} />
+                  </button>
                   <div className="relative">
                     <select value={u.role} onChange={(e) => handleRoleChange(u.id, e.target.value)}
                       className="appearance-none pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none cursor-pointer">
@@ -304,6 +399,14 @@ export default function AdminUsersPage() {
 
       {editingUser && (
         <EditUserModal user={editingUser} onSave={handleEdit} onClose={() => setEditingUser(null)} saving={saving} />
+      )}
+
+      {viewingRegistrations && (
+        <UserRegistrationsModal
+          userId={viewingRegistrations.id}
+          userName={viewingRegistrations.full_name}
+          onClose={() => setViewingRegistrations(null)}
+        />
       )}
     </main>
   );

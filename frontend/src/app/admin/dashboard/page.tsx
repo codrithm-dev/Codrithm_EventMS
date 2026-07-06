@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Users, CalendarDays, BarChart2, PlusCircle, Settings } from "lucide-react";
-import { api, ApiClientError } from "@/lib/api";
+import { Users, CalendarDays, BarChart2, PlusCircle, Settings, Download } from "lucide-react";
+import { api } from "@/lib/api";
 import type { PlatformAnalytics } from "@/types";
 
 export default function AdminDashboardPage() {
@@ -40,6 +40,7 @@ export default function AdminDashboardPage() {
     { label: "Create event", description: "Create a new event for the platform.", href: "/organizer/events/create", Icon: PlusCircle },
     { label: "Manage events", description: "View and manage all events on the platform.", href: "/organizer/events", Icon: CalendarDays },
     { label: "Analytics", description: "Explore platform-wide metrics and trends.", href: "/admin/analytics", Icon: BarChart2 },
+    { label: "Export data", description: "Download registration data as CSV.", href: "/admin/exports", Icon: Download },
     { label: "My registrations", description: "View your own event registrations.", href: "/my-registrations", Icon: Settings },
   ];
 

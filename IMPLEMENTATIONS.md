@@ -4,7 +4,7 @@
 
 **Backend:** Live at `https://codrithm.pythonanywhere.com` (FastAPI + SQLite)
 **Frontend:** Live at `https://codrithm-event-ms.vercel.app` (Next.js)
-**Last updated:** July 6, 2026 (admin-only role, edit/delete users, auto QR, simplified navbar)
+**Last updated:** July 6, 2026 (admin-only role, edit/delete users, auto QR, simplified navbar, avatar upload, analytics charts, CSV export UI, user registrations view)
 
 ---
 
@@ -170,17 +170,18 @@
 
 | # | Feature | Status | Effort |
 |---|---------|--------|--------|
-| 1 | Avatar upload (Cloudinary) | Not started | Medium |
+| 1 | Avatar upload (Cloudinary) | Done | Medium |
 | 2 | Event banner image upload | Not started | Medium |
 | 3 | Favorite/bookmark events | Not started | Medium |
 | 4 | QR code camera scanning | Not started | Large |
 | 5 | Download ticket as PDF | Not started | Medium |
-| 6 | View user's registrations (admin) | Not started | Small |
-| 7 | Analytics charts (Recharts) | Not started | Large |
+| 6 | View user's registrations (admin) | Done | Small |
+| 7 | Analytics charts (Recharts) | Done | Large |
 | 8 | Error logging service | Not started | Medium |
-| 9 | SameSite cookie attributes | Not started | Small |
+| 9 | SameSite cookie attributes | Done (httpOnly) | Small |
 | 10 | Unit tests | Not started | Large |
 | 11 | E2E tests | Not started | Large |
+| 12 | Frontend field selection UI for CSV export | Done | Small |
 
 ---
 
@@ -209,20 +210,14 @@ CORS_EXTRA_ORIGINS=https://codrithm-event-ms.vercel.app
 RESEND_API_KEY=re_your_key
 RESEND_FROM_EMAIL=noreply@coderithm.com
 
-# OAuth (set these in provider consoles)
+# OAuth (set in Google Cloud Console)
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-GITHUB_CLIENT_ID=your-github-client-id
-GITHUB_CLIENT_SECRET=your-github-client-secret
-LINKEDIN_CLIENT_ID=your-linkedin-client-id
-LINKEDIN_CLIENT_SECRET=your-linkedin-client-secret
 ```
 
-### OAuth Callback URLs (set in provider consoles)
+### OAuth Callback URLs (set in provider console)
 ```
-Google:  https://codrithm.pythonanywhere.com/api/v1/auth/google/callback
-GitHub:  https://codrithm.pythonanywhere.com/api/v1/auth/github/callback
-LinkedIn: https://codrithm.pythonanywhere.com/api/v1/auth/linkedin/callback
+Google: https://codrithm.pythonanywhere.com/api/v1/auth/google/callback
 ```
 
 ### Frontend (Vercel)

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Chrome, Github, Linkedin } from "lucide-react";
+import { Chrome } from "lucide-react";
 import AuthCard from "@/components/AuthCard";
 import { api, ApiClientError } from "@/lib/api";
 import { setStoredUser } from "@/lib/auth";
@@ -152,12 +152,6 @@ export default function RegisterPage() {
         <div className="flex flex-col sm:flex-row gap-2">
           <a href={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}/api/v1/auth/google`} className={socialBtnCls}>
             <Chrome size={16} /> Google
-          </a>
-          <a href={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}/api/v1/auth/github`} className={socialBtnCls}>
-            <Github size={16} /> GitHub
-          </a>
-          <a href={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}/api/v1/auth/linkedin`} className={socialBtnCls}>
-            <Linkedin size={16} /> LinkedIn
           </a>
         </div>
       </div>

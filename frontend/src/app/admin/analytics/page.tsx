@@ -1,9 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TrendingUp, PieChart } from "lucide-react";
-import { api, ApiClientError } from "@/lib/api";
+import { BarChart3, PieChart as PieChartIcon } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart as RechartsPie, Pie, Cell,
+  LineChart, Line,
+} from "recharts";
+import { api } from "@/lib/api";
 import type { PlatformAnalytics } from "@/types";
+
+const COLORS = ["#0066ff", "#87ffbc", "#ff6b6b", "#ffd93d", "#6bcbff", "#c084fc", "#fb923c"];
+
+const chartTooltipStyle = {
+  contentStyle: {
+    background: "var(--color-surface)",
+    border: "1px solid var(--color-border)",
+    borderRadius: 12,
+    fontSize: 12,
+  },
+  labelStyle: { color: "var(--color-text-primary)" },
+};
 
 export default function AdminAnalyticsPage() {
   const [analytics, setAnalytics] = useState<PlatformAnalytics | null>(null);
@@ -26,12 +43,28 @@ export default function AdminAnalyticsPage() {
     { label: "Total users", value: analytics?.total_users?.toLocaleString() || "—" },
     { label: "Total events", value: analytics?.total_events?.toLocaleString() || "—" },
     { label: "Total registrations", value: analytics?.total_registrations?.toLocaleString() || "—" },
+    { label: "Approval rate", value: analytics?.approval_rate != null ? `${analytics.approval_rate}%` : "—" },
   ];
 
-  const topCategories = analytics?.events_by_category
+  const categoryPieData = (analytics?.events_by_category
     ? Object.entries(analytics.events_by_category)
         .sort(([, a], [, b]) => b - a)
-        .slice(0, 5)
+        .slice(0, 7)
+    : []
+  ).map(([name, value]) => ({ name, value }));
+
+  const registrationBarData = analytics?.registrations_over_time?.map((d) => ({
+    date: d.date.slice(5),
+    count: d.count,
+  })) || [];
+
+  const userGrowthData = analytics?.user_growth?.map((d) => ({
+    date: d.date.slice(5),
+    count: d.count,
+  })) || [];
+
+  const statusPieData = analytics?.registrations_by_status
+    ? Object.entries(analytics.registrations_by_status).map(([name, value]) => ({ name, value }))
     : [];
 
   return (
@@ -51,31 +84,23 @@ export default function AdminAnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-[var(--color-border)]">
-              <p className="text-sm font-semibold text-[var(--color-text-primary)]">Events by category</p>
-              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">Distribution across event categories</p>
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">Registrations over time</p>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">Last 30 days</p>
             </div>
             <div className="p-6">
-              {topCategories.length > 0 ? (
-                <div className="flex flex-col gap-4">
-                  {topCategories.map(([category, count]) => {
-                    const maxCount = topCategories[0][1];
-                    const pct = maxCount > 0 ? (count / maxCount) * 100 : 0;
-                    return (
-                      <div key={category}>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-sm text-[var(--color-text-primary)]">{category}</span>
-                          <span className="text-sm font-semibold text-[var(--color-text-primary)]">{count}</span>
-                        </div>
-                        <div className="w-full h-2 rounded-full bg-[var(--color-border)] overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #0066ff, #87ffbc)" }} />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+              {registrationBarData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={registrationBarData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }} />
+                    <YAxis tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }} allowDecimals={false} />
+                    <Tooltip {...chartTooltipStyle} />
+                    <Bar dataKey="count" fill="#0066ff" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               ) : (
-                <div className="h-48 flex flex-col items-center justify-center gap-4 text-[var(--color-text-secondary)]">
-                  <PieChart size={48} strokeWidth={1.5} />
+                <div className="h-64 flex flex-col items-center justify-center gap-4 text-[var(--color-text-secondary)]">
+                  <BarChart3 size={48} strokeWidth={1.5} />
                   <p className="text-sm font-medium">No data available</p>
                 </div>
               )}
@@ -85,38 +110,100 @@ export default function AdminAnalyticsPage() {
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-[var(--color-border)]">
               <p className="text-sm font-semibold text-[var(--color-text-primary)]">User growth</p>
-              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">New registrations over time</p>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">New users over last 30 days</p>
             </div>
-            <div className="h-64 flex flex-col items-center justify-center gap-4 text-[var(--color-text-secondary)]">
-              <TrendingUp size={48} strokeWidth={1.5} />
-              <p className="text-sm font-medium">User growth chart</p>
-              <p className="text-xs text-center max-w-xs">Chart will render here once charting library is wired up</p>
+            <div className="p-6">
+              {userGrowthData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={userGrowthData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }} />
+                    <YAxis tick={{ fontSize: 11, fill: "var(--color-text-secondary)" }} allowDecimals={false} />
+                    <Tooltip {...chartTooltipStyle} />
+                    <Line type="monotone" dataKey="count" stroke="#87ffbc" strokeWidth={2} dot={{ r: 3, fill: "#87ffbc" }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-64 flex flex-col items-center justify-center gap-4 text-[var(--color-text-secondary)]">
+                  <BarChart3 size={48} strokeWidth={1.5} />
+                  <p className="text-sm font-medium">No data available</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {analytics?.events_by_category && (
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl px-6 py-6">
-            <p className="text-sm font-semibold text-[var(--color-text-primary)] mb-5">Categories breakdown</p>
-            <div className="flex flex-col gap-4">
-              {topCategories.map(([category, count]) => {
-                const total = topCategories.reduce((s, [, c]) => s + c, 0);
-                const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                return (
-                  <div key={category}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm text-[var(--color-text-primary)]">{category}</span>
-                      <span className="text-sm font-semibold text-[var(--color-text-primary)]">{count} ({pct}%)</span>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-[var(--color-border)] overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #0066ff, #87ffbc)" }} />
-                    </div>
-                  </div>
-                );
-              })}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-[var(--color-border)]">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">Events by category</p>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">Distribution across categories</p>
+            </div>
+            <div className="p-6">
+              {categoryPieData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <RechartsPie>
+                    <Pie
+                      data={categoryPieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={90}
+                      paddingAngle={3}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                    >
+                      {categoryPieData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip {...chartTooltipStyle} />
+                  </RechartsPie>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-64 flex flex-col items-center justify-center gap-4 text-[var(--color-text-secondary)]">
+                  <PieChartIcon size={48} strokeWidth={1.5} />
+                  <p className="text-sm font-medium">No data available</p>
+                </div>
+              )}
             </div>
           </div>
-        )}
+
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-[var(--color-border)]">
+              <p className="text-sm font-semibold text-[var(--color-text-primary)]">Registration status</p>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">Breakdown by current status</p>
+            </div>
+            <div className="p-6">
+              {statusPieData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={250}>
+                  <RechartsPie>
+                    <Pie
+                      data={statusPieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={90}
+                      paddingAngle={3}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                    >
+                      {statusPieData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip {...chartTooltipStyle} />
+                  </RechartsPie>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-64 flex flex-col items-center justify-center gap-4 text-[var(--color-text-secondary)]">
+                  <PieChartIcon size={48} strokeWidth={1.5} />
+                  <p className="text-sm font-medium">No data available</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   );

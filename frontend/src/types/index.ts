@@ -207,8 +207,13 @@ export interface PlatformAnalytics {
   total_users: number;
   total_events: number;
   total_registrations: number;
+  approval_rate: number;
+  attendance_rate: number;
+  recent_registrations: number;
   events_by_category: Record<string, number>;
   registrations_over_time: Array<{ date: string; count: number }>;
+  user_growth: Array<{ date: string; count: number }>;
+  registrations_by_status: Record<string, number>;
 }
 
 export interface EventAnalytics {
@@ -220,7 +225,28 @@ export interface EventAnalytics {
   rejected: number;
   waitlisted: number;
   checked_in: number;
+  capacity: number;
+  capacity_used_percent: number;
+  attendance_rate: number;
   registration_trend: Array<{ date: string; count: number }>;
+}
+
+export interface AdminUserRegistration {
+  id: string;
+  event_title: string;
+  event_date: string | null;
+  event_slug: string | null;
+  status: string;
+  ticket_id: string | null;
+  registered_at: string;
+}
+
+export interface AdminUserRegistrationsResponse {
+  items: AdminUserRegistration[];
+  total: number;
+  page: number;
+  pages: number;
+  user: User;
 }
 
 export interface OrganizerDashboardSummary {

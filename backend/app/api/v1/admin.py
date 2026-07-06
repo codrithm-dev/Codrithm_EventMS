@@ -90,6 +90,57 @@ async def delete_user(
     return {"message": "User deleted"}
 
 
+@router.get("/users/{user_id}/registrations")
+async def get_user_registrations(
+    user_id: str,
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=50),
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(User).where(User.id == user_id))
+    target_user = result.scalar_one_or_none()
+    if not target_user:
+        raise NotFoundException("User")
+
+    count_result = await db.execute(
+        select(func.count(Registration.id)).where(Registration.user_id == user_id)
+    )
+    total = count_result.scalar()
+
+    query = (
+        select(Registration)
+        .where(Registration.user_id == user_id)
+        .order_by(Registration.registered_at.desc())
+        .offset((page - 1) * limit)
+        .limit(limit)
+    )
+    result = await db.execute(query)
+    registrations = result.scalars().all()
+
+    items = []
+    for reg in registrations:
+        event_result = await db.execute(select(Event).where(Event.id == reg.event_id))
+        event = event_result.scalar_one_or_none()
+        items.append({
+            "id": reg.id,
+            "event_title": event.title if event else "",
+            "event_date": event.date_time.isoformat() if event else None,
+            "event_slug": event.slug if event else None,
+            "status": reg.status.value if hasattr(reg.status, "value") else reg.status,
+            "ticket_id": reg.ticket_id,
+            "registered_at": reg.registered_at.isoformat(),
+        })
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "pages": math.ceil(total / limit) if total else 0,
+        "user": UserResponse.model_validate(target_user),
+    }
+
+
 @router.get("/dashboard/export/{event_id}")
 async def export_registrations(
     event_id: str,

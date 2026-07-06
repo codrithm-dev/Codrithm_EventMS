@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Camera } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api";
 import { setStoredUser, getStoredUser } from "@/lib/auth";
 import type { User } from "@/types";
@@ -31,6 +32,7 @@ const fieldCls = "flex flex-col gap-1.5";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [user, setUser] = useState<User | null>(null);
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
@@ -39,6 +41,7 @@ export default function ProfilePage() {
   const [portfolio, setPortfolio] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -71,6 +74,41 @@ export default function ProfilePage() {
       }
     })();
   }, []);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+      const res = await fetch(`${BASE_URL}/users/me/avatar`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.detail || "Upload failed");
+      }
+
+      const updated = await res.json() as User;
+      setUser(updated);
+      setStoredUser(updated as unknown as Record<string, unknown>);
+      setSuccess("Avatar updated successfully");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload avatar");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,9 +153,36 @@ export default function ProfilePage() {
 
         <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl px-6 sm:px-8 py-8">
           <div className="flex flex-col items-center gap-2 mb-8">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-extrabold text-white select-none bg-gradient-to-br from-[var(--color-primary-blue)] to-[var(--color-accent-green)]" aria-label="Profile avatar">
-              {user?.full_name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "U"}
-            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="relative w-20 h-20 rounded-full overflow-hidden group cursor-pointer disabled:cursor-not-allowed"
+              aria-label="Upload avatar"
+            >
+              {user?.avatar_url ? (
+                <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-2xl font-extrabold text-white select-none bg-gradient-to-br from-[var(--color-primary-blue)] to-[var(--color-accent-green)]">
+                  {user?.full_name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "U"}
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                {uploading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Camera size={20} className="text-white" />
+                )}
+              </div>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={handleAvatarUpload}
+            />
+            <p className="text-xs text-[var(--color-text-secondary)]">Click to change avatar</p>
             <p className="text-xs text-[var(--color-text-secondary)]">{user?.role}</p>
           </div>
 
