@@ -25,13 +25,13 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
     cookie_domain = settings.COOKIE_DOMAIN or None
     response.set_cookie(
         "access_token", access_token,
-        httponly=True, secure=True, samesite="lax",
+        httponly=True, secure=True, samesite="none",
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         domain=cookie_domain, path="/",
     )
     response.set_cookie(
         "refresh_token", refresh_token,
-        httponly=True, secure=True, samesite="lax",
+        httponly=True, secure=True, samesite="none",
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
         domain=cookie_domain, path="/",
     )
