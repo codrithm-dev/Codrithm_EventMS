@@ -13,20 +13,16 @@ function parseJwtPayload(token: string): Record<string, unknown> | null {
 
 const PUBLIC_ROUTES = ["/", "/about", "/events", "/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
 
-const ORGANIZER_ROUTES = ["/organizer"];
-const ADMIN_ROUTES = ["/admin"];
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("auth_token")?.value;
 
   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route)) || pathname.startsWith("/events/");
-  const isOrganizerRoute = pathname.startsWith("/organizer");
   const isAdminRoute = pathname.startsWith("/admin");
   const isProtectedRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/profile") || pathname.startsWith("/my-registrations") || pathname.startsWith("/tickets");
 
   if (!token) {
-    if (isProtectedRoute || isOrganizerRoute || isAdminRoute) {
+    if (isProtectedRoute || isAdminRoute) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
@@ -45,13 +41,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  if (isOrganizerRoute && role !== "organizer" && role !== "admin") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/organizer/:path*", "/admin/:path*", "/profile/:path*", "/my-registrations/:path*", "/tickets/:path*", "/login", "/register"],
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/profile/:path*", "/my-registrations/:path*", "/tickets/:path*", "/login", "/register"],
 };

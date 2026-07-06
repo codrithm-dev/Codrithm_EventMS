@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Users, CalendarDays, UserCheck, BarChart2, UserCog } from "lucide-react";
+import { Users, CalendarDays, BarChart2, PlusCircle, Settings } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api";
 import type { PlatformAnalytics } from "@/types";
 
@@ -36,9 +36,11 @@ export default function AdminDashboardPage() {
   ];
 
   const QUICK_ACTIONS = [
-    { label: "Manage users", description: "View, search, and change roles for all platform users.", href: "/admin/users", Icon: UserCog },
-    { label: "Platform analytics", description: "Explore platform-wide metrics, trends, and top organizers.", href: "/admin/analytics", Icon: BarChart2 },
-    { label: "Manage events", description: "Browse and oversee all events published on the platform.", href: "/organizer/events", Icon: CalendarDays },
+    { label: "Manage users", description: "View, edit, and manage all platform users.", href: "/admin/users", Icon: Users },
+    { label: "Create event", description: "Create a new event for the platform.", href: "/organizer/events/create", Icon: PlusCircle },
+    { label: "Manage events", description: "View and manage all events on the platform.", href: "/organizer/events", Icon: CalendarDays },
+    { label: "Analytics", description: "Explore platform-wide metrics and trends.", href: "/admin/analytics", Icon: BarChart2 },
+    { label: "My registrations", description: "View your own event registrations.", href: "/my-registrations", Icon: Settings },
   ];
 
   return (
@@ -56,7 +58,7 @@ export default function AdminDashboardPage() {
         </div>
 
         <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-4">Quick actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
           {QUICK_ACTIONS.map(({ label, description, href, Icon }) => (
             <Link key={label} href={href}
               className="group bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl px-6 py-5 flex flex-col gap-3 hover:border-[var(--color-primary-blue)]/50 hover:shadow-lg hover:shadow-[rgba(0,102,255,0.08)] transition duration-150">

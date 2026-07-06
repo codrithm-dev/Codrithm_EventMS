@@ -49,10 +49,6 @@ export default function Navbar() {
         { label: "Login", href: "/login" },
       ];
 
-  if (authed && (user?.role === "organizer" || user?.role === "admin")) {
-    navLinks.push({ label: "Organizer", href: "/organizer/dashboard" });
-    navLinks.push({ label: "Create Event", href: "/organizer/events/create" });
-  }
   if (authed && user?.role === "admin") {
     navLinks.push({ label: "Admin", href: "/admin/dashboard" });
   }

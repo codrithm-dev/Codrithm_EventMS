@@ -6,6 +6,8 @@ from app.models.registration import Registration, RegistrationStatus
 from app.models.event import Event, EventStatus, ApprovalMode
 from app.models.waitlist import Waitlist
 from app.core.exceptions import NotFoundException, ConflictException, CapacityFullException, DeadlinePassedException, ForbiddenException
+from app.core.qr import generate_qr_code
+from app.services.storage_service import upload_image
 import math
 
 
@@ -88,6 +90,15 @@ async def register_for_event(db: AsyncSession, user_id: str, event_id: str, data
         )
         db.add(registration)
         await db.flush()
+
+        # Auto-generate QR code for auto-approved registrations
+        try:
+            qr_buffer = generate_qr_code(registration.ticket_id)
+            qr_url = await upload_image(qr_buffer, f"tickets/{registration.ticket_id}")
+            registration.qr_code_url = qr_url
+        except Exception:
+            pass
+
         return registration
     else:
         registration = Registration(
@@ -123,6 +134,15 @@ async def approve_registration(db: AsyncSession, registration_id: str, event_id:
 
     registration.status = RegistrationStatus.approved
     registration.ticket_id = str(uuid.uuid4())
+
+    # Auto-generate QR code
+    try:
+        qr_buffer = generate_qr_code(registration.ticket_id)
+        qr_url = await upload_image(qr_buffer, f"tickets/{registration.ticket_id}")
+        registration.qr_code_url = qr_url
+    except Exception:
+        pass
+
     return registration
 
 

@@ -7,9 +7,7 @@ from app.database import Base
 
 
 class UserRole(str, enum.Enum):
-    guest = "guest"
     user = "user"
-    organizer = "organizer"
     admin = "admin"
 
 

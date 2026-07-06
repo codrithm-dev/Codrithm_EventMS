@@ -32,8 +32,8 @@ async def get_current_user(
 
 
 async def get_current_organizer(user: User = Depends(get_current_user)) -> User:
-    if user.role not in ("organizer", "admin"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Organizer access required")
+    if user.role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return user
 
 

@@ -53,6 +53,43 @@ async def update_user_role(
     return {"message": f"User role updated to {data.role}"}
 
 
+@router.put("/users/{user_id}")
+async def update_user(
+    user_id: str,
+    data: AdminUserUpdate,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(User).where(User.id == user_id))
+    target_user = result.scalar_one_or_none()
+    if not target_user:
+        raise NotFoundException("User")
+    if data.role:
+        target_user.role = UserRole(data.role)
+    if data.full_name:
+        target_user.full_name = data.full_name
+    if data.email:
+        target_user.email = data.email
+    return {"message": "User updated", "user": UserResponse.model_validate(target_user)}
+
+
+@router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: str,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    if user_id == admin.id:
+        from app.core.exceptions import ForbiddenException
+        raise ForbiddenException("Cannot delete your own account")
+    result = await db.execute(select(User).where(User.id == user_id))
+    target_user = result.scalar_one_or_none()
+    if not target_user:
+        raise NotFoundException("User")
+    await db.delete(target_user)
+    return {"message": "User deleted"}
+
+
 @router.get("/dashboard/export/{event_id}")
 async def export_registrations(
     event_id: str,

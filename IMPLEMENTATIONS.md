@@ -4,7 +4,7 @@
 
 **Backend:** Live at `https://codrithm.pythonanywhere.com` (FastAPI + SQLite)
 **Frontend:** Live at `https://codrithm-event-ms.vercel.app` (Next.js)
-**Last updated:** July 6, 2026
+**Last updated:** July 6, 2026 (admin-only role, edit/delete users, auto QR, simplified navbar)
 
 ---
 
@@ -24,6 +24,8 @@
 | Status badge casing mismatch | Accept both lowercase and capitalized status strings |
 | CORS not allowing Vercel domain | Configurable via `CORS_EXTRA_ORIGINS` env var |
 | JWT missing role field | Added `role` to access token payload |
+| QR code not auto-generated on approval | Auto-generate QR when registration is approved |
+| Organizer role unnecessary | Simplified to admin/user only |
 
 ---
 
@@ -43,10 +45,11 @@
 - [x] `POST /auth/verify-email?token=...` works end-to-end
 - [x] In-memory token storage (works for single-process)
 
-#### 3. Organizer Dashboard — DONE (client-side)
+#### 3. Organizer Dashboard — DONE (admin-only)
 - [x] Frontend computes stats from array response (total events, registrations, published, drafts)
 - [x] Events table with status, date, registered count
 - [x] Quick "Create event" button
+- [x] Admin dashboard with consolidated quick actions (users, events, analytics)
 
 #### 4. Organizer Event Management — DONE
 - [x] `GET /events/my` — list organizer's events
@@ -66,6 +69,7 @@
 - [x] `POST /notifications/read-all` — mark all as read
 - [x] Notification bell in Navbar with unread badge
 - [x] Mobile menu notification link with count
+- [x] Simplified navbar — admin sees Home, Browse Events, Dashboard, Admin
 
 #### 6. User Profile Enhancements — DONE
 - [x] Added `bio`, `linkedin_url`, `github_url`, `portfolio_url` to User model
@@ -86,13 +90,14 @@
 - [ ] "My favorites" / bookmark events (not yet)
 - [ ] Event banner image upload (not yet — needs Cloudinary)
 
-#### 8. Ticket & QR Code — PARTIAL
+#### 8. Ticket & QR Code — DONE
 - [x] `GET /tickets/{registration_id}` — ticket endpoint works
 - [x] `POST /tickets/{registration_id}/generate-qr` — QR generation works
 - [x] `POST /tickets/checkin` — check-in works
 - [x] `GET /tickets/checkin/{event_id}/stats` — check-in stats work
 - [x] QR code generation via `qrcode` library
-- [x] Ticket page shows QR code (if uploaded to Cloudinary)
+- [x] Auto-generate QR on registration approval (auto + manual)
+- [x] Ticket page shows QR code (auto-generated)
 - [ ] QR code scanning with camera (not yet)
 - [ ] Download ticket as PDF (not yet)
 
@@ -101,10 +106,13 @@
 #### 9. Admin User Management — DONE
 - [x] `GET /admin/users` — paginated user list (server-side pagination)
 - [x] `PUT /admin/users/{user_id}/role` — update user role
-- [x] Frontend displays users with role badges
+- [x] `PUT /admin/users/{user_id}` — edit user name, email, role
+- [x] `DELETE /admin/users/{user_id}` — delete user (cannot delete self)
+- [x] Frontend displays users with role badges (admin/user only)
 - [x] Frontend pagination with page controls
-- [x] User search (client-side debounced)
-- [ ] Ban/disable users (not yet)
+- [x] User search (client-side)
+- [x] Edit modal with name, email, role fields
+- [x] Delete with confirmation dialog
 - [ ] View user's registrations (not yet)
 
 #### 10. Export Functionality — DONE
@@ -156,32 +164,21 @@
 
 ---
 
-## Remaining Work (Not Yet Started)
-
-### Priority 5 — Enhancements
+## Remaining Work
 
 | # | Feature | Status | Effort |
 |---|---------|--------|--------|
 | 1 | Avatar upload (Cloudinary) | Not started | Medium |
 | 2 | Event banner image upload | Not started | Medium |
-| 3 | Frontend event search/filter UI | **Done** | — |
-| 4 | Event categories page | **Done** | — |
-| 5 | Favorite/bookmark events | Not started | Medium |
-| 6 | Event sharing (social buttons) | **Done** | — |
-| 7 | QR code camera scanning | Not started | Large |
-| 8 | Download ticket as PDF | Not started | Medium |
-| 9 | Admin user pagination | **Done** | — |
-| 10 | Admin user search | **Done** (client-side) | — |
-| 11 | Ban/disable users | Not started | Medium |
-| 12 | Analytics charts (Chart.js/Recharts) | Not started | Large |
-| 13 | Custom 404/500 pages | **Done** | — |
-| 14 | Global error handler with CORS | **Done** | — |
-| 15 | CSRF protection | **Done** | — |
-| 16 | `.env.example` documentation | **Done** | — |
-| 17 | Pin dependencies in requirements.txt | **Done** | — |
-| 18 | SEO / meta tags / Open Graph | **Done** | — |
-| 19 | Unit tests | Not started | Large |
-| 20 | E2E tests | Not started | Large |
+| 3 | Favorite/bookmark events | Not started | Medium |
+| 4 | QR code camera scanning | Not started | Large |
+| 5 | Download ticket as PDF | Not started | Medium |
+| 6 | View user's registrations (admin) | Not started | Small |
+| 7 | Analytics charts (Recharts) | Not started | Large |
+| 8 | Error logging service | Not started | Medium |
+| 9 | SameSite cookie attributes | Not started | Small |
+| 10 | Unit tests | Not started | Large |
+| 11 | E2E tests | Not started | Large |
 
 ---
 
@@ -191,9 +188,10 @@
 |----------|--------|--------|
 | Database | SQLite (free tier) | No external DB needed, works on PythonAnywhere |
 | Auth | JWT (access + refresh) | Stateless, no session storage needed |
+| Roles | admin, user | Simplified — admin manages everything, users register for events |
 | Email | Resend (free tier) | 100 emails/day, simple API |
 | File Storage | Cloudinary (free tier) | For avatars, banners, QR codes |
-| QR Codes | `qrcode` Python lib | Generates PNG images |
+| QR Codes | `qrcode` Python lib | Auto-generated on registration approval |
 | Hosting (backend) | PythonAnywhere free tier | Free, supports Python/FastAPI |
 | Hosting (frontend) | Vercel free tier | Free, fast Next.js deployment |
 
@@ -221,7 +219,11 @@ NEXT_PUBLIC_API_URL=https://codrithm.pythonanywhere.com/api/v1
 
 **Tables:** users, events, registrations, notifications, waitlists, attendance
 
-**New columns added (July 5, 2026):**
+**Roles simplified (July 6, 2026):**
+- `users.role` enum: `user`, `admin` (removed `guest`, `organizer`)
+- Existing organizer users should be changed to admin via admin panel
+
+**Columns (July 5, 2026):**
 - `users`: bio, linkedin_url, github_url, portfolio_url
 - `notifications`: is_read
 
@@ -319,13 +321,23 @@ When deploying changes:
 - [ ] Register new user → receives verification email
 - [ ] Verify email → can log in
 - [ ] Login → dashboard shows user info
-- [ ] Create event → appears in organizer list
-- [ ] Publish event → appears on homepage
-- [ ] Register for event → notification + email
-- [ ] Approve registration → notification + email
-- [ ] Check in attendee → stats update
-- [ ] Cancel registration → waitlist promotion
+- [ ] Admin: create event → appears in events list
+- [ ] Admin: publish event → appears on homepage
+- [ ] User: register for event → notification + email + auto QR generated
+- [ ] Admin: approve registration → notification + email + QR code in ticket
+- [ ] Admin: check in attendee → stats update
+- [ ] User: cancel registration → waitlist promotion
 - [ ] Profile update → bio/links saved
 - [ ] Notifications page → mark as read works
 - [ ] Admin dashboard → correct totals
-- [ ] Export CSV → downloads with selected fields
+- [ ] Admin: export CSV → downloads with selected fields
+- [ ] Admin: edit user → modal opens, saves changes
+- [ ] Admin: delete user → confirmation, user removed
+- [ ] Admin: change user role → role updates instantly
+- [ ] `/events/categories` → category grid loads with counts
+- [ ] `/events/[slug]` → share buttons work (Twitter, LinkedIn, copy link)
+- [ ] Navbar → admin sees Home, Browse Events, Dashboard, Admin
+- [ ] Non-admin → cannot access /admin routes
+- [ ] `/nonexistent-page` → shows custom 404 page
+- [ ] Trigger 500 error → shows custom error page
+- [ ] Check page source → OpenGraph meta tags present
