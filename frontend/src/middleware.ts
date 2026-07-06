@@ -15,7 +15,7 @@ const PUBLIC_ROUTES = ["/", "/about", "/events", "/login", "/register", "/forgot
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get("auth_token")?.value;
+  const token = request.cookies.get("access_token")?.value;
 
   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route)) || pathname.startsWith("/events/");
   const isAdminRoute = pathname.startsWith("/admin");

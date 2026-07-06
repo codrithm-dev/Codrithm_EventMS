@@ -26,6 +26,8 @@
 | JWT missing role field | Added `role` to access token payload |
 | QR code not auto-generated on approval | Auto-generate QR when registration is approved |
 | Organizer role unnecessary | Simplified to admin/user only |
+| OAuth buttons disabled | Implemented Google, GitHub, LinkedIn OAuth flow |
+| Tokens stored in localStorage (XSS risk) | Switched to httpOnly secure cookies |
 
 ---
 
@@ -206,6 +208,21 @@ FRONTEND_URL=https://codrithm-event-ms.vercel.app
 CORS_EXTRA_ORIGINS=https://codrithm-event-ms.vercel.app
 RESEND_API_KEY=re_your_key
 RESEND_FROM_EMAIL=noreply@coderithm.com
+
+# OAuth (set these in provider consoles)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+LINKEDIN_CLIENT_ID=your-linkedin-client-id
+LINKEDIN_CLIENT_SECRET=your-linkedin-client-secret
+```
+
+### OAuth Callback URLs (set in provider consoles)
+```
+Google:  https://codrithm.pythonanywhere.com/api/v1/auth/google/callback
+GitHub:  https://codrithm.pythonanywhere.com/api/v1/auth/github/callback
+LinkedIn: https://codrithm.pythonanywhere.com/api/v1/auth/linkedin/callback
 ```
 
 ### Frontend (Vercel)
@@ -320,7 +337,10 @@ When deploying changes:
 
 - [ ] Register new user → receives verification email
 - [ ] Verify email → can log in
-- [ ] Login → dashboard shows user info
+- [ ] Login → tokens stored in httpOnly cookies
+- [ ] Login with Google → redirects, creates account, signs in
+- [ ] Login with GitHub → redirects, creates account, signs in
+- [ ] Login with LinkedIn → redirects, creates account, signs in
 - [ ] Admin: create event → appears in events list
 - [ ] Admin: publish event → appears on homepage
 - [ ] User: register for event → notification + email + auto QR generated
@@ -332,8 +352,9 @@ When deploying changes:
 - [ ] Admin dashboard → correct totals
 - [ ] Admin: export CSV → downloads with selected fields
 - [ ] Admin: edit user → modal opens, saves changes
-- [ ] Admin: delete user → confirmation, user removed
+- [ ] Admin: delete user → confirmation, user removed from DB
 - [ ] Admin: change user role → role updates instantly
+- [ ] Logout → httpOnly cookies cleared
 - [ ] `/events/categories` → category grid loads with counts
 - [ ] `/events/[slug]` → share buttons work (Twitter, LinkedIn, copy link)
 - [ ] Navbar → admin sees Home, Browse Events, Dashboard, Admin

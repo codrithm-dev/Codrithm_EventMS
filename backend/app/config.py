@@ -31,6 +31,8 @@ class Settings(BaseSettings):
 
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    COOKIE_DOMAIN: str = ""
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
 

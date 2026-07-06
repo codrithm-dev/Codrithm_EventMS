@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Chrome, Github, Linkedin } from "lucide-react";
 import AuthCard from "@/components/AuthCard";
 import { api, ApiClientError } from "@/lib/api";
-import { setTokens, setStoredUser } from "@/lib/auth";
+import { setStoredUser } from "@/lib/auth";
 import type { User, RegisterRequest } from "@/types";
 
 const inputCls = `
@@ -51,8 +51,7 @@ export default function RegisterPage() {
       const payload: RegisterRequest = { full_name: fullName, email, password };
       await api.post<User>("/auth/register", payload);
 
-      const loginResult = await api.post<{ access_token: string; refresh_token: string }>("/auth/login", { email, password });
-      setTokens(loginResult.access_token, loginResult.refresh_token);
+      await api.post("/auth/login", { email, password }, true);
 
       const user = await api.get<User>("/users/me");
       setStoredUser(user as unknown as Record<string, unknown>);
@@ -151,15 +150,15 @@ export default function RegisterPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
-          <button type="button" className={socialBtnCls} aria-label="Continue with Google" disabled>
+          <a href={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}/api/v1/auth/google`} className={socialBtnCls}>
             <Chrome size={16} /> Google
-          </button>
-          <button type="button" className={socialBtnCls} aria-label="Continue with GitHub" disabled>
+          </a>
+          <a href={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}/api/v1/auth/github`} className={socialBtnCls}>
             <Github size={16} /> GitHub
-          </button>
-          <button type="button" className={socialBtnCls} aria-label="Continue with LinkedIn" disabled>
+          </a>
+          <a href={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}/api/v1/auth/linkedin`} className={socialBtnCls}>
             <Linkedin size={16} /> LinkedIn
-          </button>
+          </a>
         </div>
       </div>
 

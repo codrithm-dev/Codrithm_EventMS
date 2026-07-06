@@ -1,5 +1,3 @@
-import { getAccessToken, getRefreshToken, setTokens, removeTokens } from "./auth";
-
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 interface RequestOptions {
@@ -21,20 +19,13 @@ class ApiClientError extends Error {
 }
 
 async function refreshAccessToken(): Promise<boolean> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return false;
-
   try {
     const res = await fetch(`${BASE_URL}/auth/refresh`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
     });
-
     if (!res.ok) return false;
-
-    const data = await res.json();
-    setTokens(data.access_token, data.refresh_token);
     return true;
   } catch {
     return false;
@@ -49,16 +40,10 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     ...headers,
   };
 
-  if (!skipAuth) {
-    const token = getAccessToken();
-    if (token) {
-      requestHeaders["Authorization"] = `Bearer ${token}`;
-    }
-  }
-
   const config: RequestInit = {
     method,
     headers: requestHeaders,
+    credentials: "include",
   };
 
   if (body !== undefined && method !== "GET") {
@@ -67,15 +52,12 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
 
   let res = await fetch(`${BASE_URL}${endpoint}`, config);
 
+  // Auto-refresh on 401
   if (res.status === 401 && !skipAuth) {
     const refreshed = await refreshAccessToken();
     if (refreshed) {
-      const newToken = getAccessToken();
-      requestHeaders["Authorization"] = `Bearer ${newToken}`;
-      config.headers = requestHeaders;
       res = await fetch(`${BASE_URL}${endpoint}`, config);
     } else {
-      removeTokens();
       if (typeof window !== "undefined") {
         window.location.href = "/login";
       }

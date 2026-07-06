@@ -6,8 +6,8 @@ import Link from "next/link";
 import { Chrome, Github, Linkedin } from "lucide-react";
 import AuthCard from "@/components/AuthCard";
 import { api, ApiClientError } from "@/lib/api";
-import { setTokens, setStoredUser } from "@/lib/auth";
-import type { AuthTokens, User } from "@/types";
+import { setStoredUser } from "@/lib/auth";
+import type { User } from "@/types";
 
 const inputCls = `
   w-full px-4 py-2.5 rounded-xl text-sm
@@ -48,8 +48,7 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const tokens = await api.post<AuthTokens>("/auth/login", { email, password }, true);
-      setTokens(tokens.access_token, tokens.refresh_token);
+      await api.post("/auth/login", { email, password }, true);
 
       const user = await api.get<User>("/users/me");
       setStoredUser(user as unknown as Record<string, unknown>);
@@ -106,9 +105,9 @@ export default function LoginPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
-          <button type="button" className={socialBtnCls} aria-label="Continue with Google" disabled><Chrome size={16} /> Google</button>
-          <button type="button" className={socialBtnCls} aria-label="Continue with GitHub" disabled><Github size={16} /> GitHub</button>
-          <button type="button" className={socialBtnCls} aria-label="Continue with LinkedIn" disabled><Linkedin size={16} /> LinkedIn</button>
+          <a href={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}/api/v1/auth/google`} className={socialBtnCls}><Chrome size={16} /> Google</a>
+          <a href={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}/api/v1/auth/github`} className={socialBtnCls}><Github size={16} /> GitHub</a>
+          <a href={`${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}/api/v1/auth/linkedin`} className={socialBtnCls}><Linkedin size={16} /> LinkedIn</a>
         </div>
       </div>
 

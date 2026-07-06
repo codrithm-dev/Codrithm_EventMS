@@ -1,40 +1,25 @@
-const ACCESS_TOKEN_KEY = "access_token";
-const REFRESH_TOKEN_KEY = "refresh_token";
 const USER_KEY = "user";
-const AUTH_COOKIE_KEY = "auth_token";
 
 export function getAccessToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|;\s*)access_token=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
 export function getRefreshToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|;\s*)refresh_token=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
-function setCookie(name: string, value: string, days = 7): void {
-  if (typeof document === "undefined") return;
-  const expires = new Date(Date.now() + days * 86400000).toUTCString();
-  document.cookie = `${name}=${value}; path=/; expires=${expires}; SameSite=Lax`;
-}
-
-function removeCookie(name: string): void {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
-}
-
-export function setTokens(accessToken: string, refreshToken: string): void {
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-  setCookie(AUTH_COOKIE_KEY, accessToken);
+export function setTokens(_accessToken: string, _refreshToken: string): void {
+  // Tokens are set as httpOnly cookies by the backend
+  // This function is kept for backward compatibility but does nothing
 }
 
 export function removeTokens(): void {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  if (typeof window === "undefined") return;
   localStorage.removeItem(USER_KEY);
-  removeCookie(AUTH_COOKIE_KEY);
 }
 
 export function setStoredUser(user: Record<string, unknown>): void {
@@ -57,7 +42,11 @@ export function isAuthenticated(): boolean {
 }
 
 export function logout(): void {
-  removeTokens();
+  fetch(`${process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "")}/api/v1/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  }).catch(() => {});
+  localStorage.removeItem(USER_KEY);
   window.location.href = "/login";
 }
 
