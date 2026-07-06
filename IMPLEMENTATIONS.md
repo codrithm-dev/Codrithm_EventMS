@@ -4,7 +4,7 @@
 
 **Backend:** Live at `https://codrithm.pythonanywhere.com` (FastAPI + SQLite)
 **Frontend:** Live at `https://codrithm-event-ms.vercel.app` (Next.js)
-**Last updated:** July 5, 2026
+**Last updated:** July 6, 2026
 
 ---
 
@@ -73,16 +73,17 @@
 - [x] `PUT /users/me` handles all new fields
 - [x] Profile page with all fields editable
 - [x] SQLite migration for new columns
+- [x] SEO / meta tags / Open Graph (root layout + event pages)
 - [ ] Avatar upload (not yet — needs Cloudinary)
 
-#### 7. Event Features — PARTIAL
+#### 7. Event Features — DONE
 - [x] Event search with `?search=` param (backend)
 - [x] Category filter with `?category=` param (backend)
 - [x] Event type filter with `?event_type=` param (backend)
-- [ ] Frontend search/filter UI (not yet)
-- [ ] Event categories page (not yet)
+- [x] Frontend search/filter UI with debounced search
+- [x] Event categories page (`/events/categories`)
+- [x] Event sharing / social buttons (Twitter, LinkedIn, copy link)
 - [ ] "My favorites" / bookmark events (not yet)
-- [ ] Event sharing / social buttons (not yet)
 - [ ] Event banner image upload (not yet — needs Cloudinary)
 
 #### 8. Ticket & QR Code — PARTIAL
@@ -97,12 +98,12 @@
 
 ### ✅ Priority 3 — Admin & Analytics
 
-#### 9. Admin User Management — PARTIAL
-- [x] `GET /admin/users` — paginated user list
+#### 9. Admin User Management — DONE
+- [x] `GET /admin/users` — paginated user list (server-side pagination)
 - [x] `PUT /admin/users/{user_id}/role` — update user role
 - [x] Frontend displays users with role badges
-- [ ] Frontend pagination (only page 1 shown)
-- [ ] User search (not yet)
+- [x] Frontend pagination with page controls
+- [x] User search (client-side debounced)
 - [ ] Ban/disable users (not yet)
 - [ ] View user's registrations (not yet)
 
@@ -128,29 +129,30 @@
 
 ### ✅ Priority 4 — Security & Production
 
-#### 13. Security Hardening — PARTIAL
+#### 13. Security Hardening — DONE
 - [x] Rate limiting on auth endpoints (login: 10/min, register: 5/min, forgot-pw: 3/5min)
 - [x] In-memory sliding window rate limiter
 - [x] SQL injection protection (SQLAlchemy ORM)
 - [x] Input validation via Pydantic schemas
-- [ ] CSRF protection (not yet)
+- [x] CSRF protection (Origin/Referer header validation on mutations)
 - [ ] SameSite cookie attributes (not yet)
 
-#### 14. Error Handling — PARTIAL
+#### 14. Error Handling — DONE
 - [x] Custom exception classes (NotFound, Unauthorized, Forbidden, Conflict, etc.)
 - [x] CORS middleware configured for Vercel domain
 - [x] Graceful email fallback when no API key
-- [ ] Global exception handler with CORS headers on crash
-- [ ] Custom 404/500 pages in frontend
-- [ ] Error logging service
+- [x] Global exception handler with CORS headers on crash
+- [x] Custom 404 page in frontend (not-found.tsx)
+- [x] Custom 500 error page in frontend (error.tsx)
+- [ ] Error logging service (not yet)
 
 #### 15. Environment Variables — DONE
 - [x] `.env` file for backend config
 - [x] `NEXT_PUBLIC_API_URL` for frontend
 - [x] `RESEND_API_KEY` on PythonAnywhere
 - [x] `CORS_EXTRA_ORIGINS` for multiple domains
-- [ ] `.env.example` file (not yet)
-- [ ] Pin `bcrypt==3.2.2` in requirements.txt (not yet)
+- [x] `.env.example` file (backend + frontend)
+- [x] Pin `bcrypt==4.2.1` in requirements.txt
 
 ---
 
@@ -162,22 +164,22 @@
 |---|---------|--------|--------|
 | 1 | Avatar upload (Cloudinary) | Not started | Medium |
 | 2 | Event banner image upload | Not started | Medium |
-| 3 | Frontend event search/filter UI | Not started | Medium |
-| 4 | Event categories page | Not started | Small |
+| 3 | Frontend event search/filter UI | **Done** | — |
+| 4 | Event categories page | **Done** | — |
 | 5 | Favorite/bookmark events | Not started | Medium |
-| 6 | Event sharing (social buttons) | Not started | Small |
+| 6 | Event sharing (social buttons) | **Done** | — |
 | 7 | QR code camera scanning | Not started | Large |
 | 8 | Download ticket as PDF | Not started | Medium |
-| 9 | Admin user pagination | Not started | Small |
-| 10 | Admin user search | Not started | Small |
+| 9 | Admin user pagination | **Done** | — |
+| 10 | Admin user search | **Done** (client-side) | — |
 | 11 | Ban/disable users | Not started | Medium |
 | 12 | Analytics charts (Chart.js/Recharts) | Not started | Large |
-| 13 | Custom 404/500 pages | Not started | Small |
-| 14 | Global error handler with CORS | Not started | Small |
-| 15 | CSRF protection | Not started | Medium |
-| 16 | `.env.example` documentation | Not started | Small |
-| 17 | Pin dependencies in requirements.txt | Not started | Small |
-| 18 | SEO / meta tags / Open Graph | Not started | Medium |
+| 13 | Custom 404/500 pages | **Done** | — |
+| 14 | Global error handler with CORS | **Done** | — |
+| 15 | CSRF protection | **Done** | — |
+| 16 | `.env.example` documentation | **Done** | — |
+| 17 | Pin dependencies in requirements.txt | **Done** | — |
+| 18 | SEO / meta tags / Open Graph | **Done** | — |
 | 19 | Unit tests | Not started | Large |
 | 20 | E2E tests | Not started | Large |
 
@@ -249,6 +251,7 @@ conn.close()
 ```
 EventMS/
 ├── backend/
+│   ├── .env.example              # Backend env var documentation
 │   ├── app/
 │   │   ├── api/v1/
 │   │   │   ├── auth.py          # Register, login, refresh, verify, reset
@@ -264,7 +267,7 @@ EventMS/
 │   │   │   ├── security.py      # JWT, password hashing
 │   │   │   ├── email.py         # Resend integration + templates
 │   │   │   ├── qr.py            # QR code generation
-│   │   │   ├── middleware.py     # CORS setup
+│   │   │   ├── middleware.py     # CORS + CSRF protection
 │   │   │   ├── exceptions.py    # Custom exception classes
 │   │   │   └── rate_limit.py    # In-memory rate limiter
 │   │   ├── models/              # SQLAlchemy models
@@ -274,10 +277,17 @@ EventMS/
 │   ├── wsgi.py                  # PythonAnywhere adapter
 │   └── migrate.sql              # DB migration script
 ├── frontend/
+│   ├── .env.example              # Frontend env var documentation
 │   └── src/
 │       ├── app/                 # Next.js pages (App Router)
+│       │   ├── not-found.tsx    # Custom 404 page
+│       │   ├── error.tsx        # Custom 500 error page
 │       │   ├── notifications/   # Notifications page
 │       │   ├── profile/         # Profile settings
+│       │   ├── events/
+│       │   │   ├── page.tsx     # Browse events with search/filter
+│       │   │   ├── categories/  # Event categories page
+│       │   │   └── [slug]/      # Event detail + share buttons
 │       │   ├── organizer/       # Organizer pages
 │       │   ├── admin/           # Admin pages
 │       │   └── ...

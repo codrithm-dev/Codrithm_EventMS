@@ -2,13 +2,61 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Calendar, MapPin, Users, Clock, ArrowLeft } from "lucide-react";
+import { Calendar, MapPin, Users, Clock, ArrowLeft, Twitter, Linkedin, Link as LinkIcon, Check } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api";
 import { isAuthenticated } from "@/lib/auth";
 import type { EventDetail } from "@/types";
 
 interface Props {
   params: Promise<{ slug: string }>;
+}
+
+function ShareButtons({ title, slug }: { title: string; slug: string }) {
+  const [copied, setCopied] = useState(false);
+  const url = typeof window !== "undefined" ? window.location.href : `https://codrithm-event-ms.vercel.app/events/${slug}`;
+  const text = `Check out ${title} on Codrithm Events!`;
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs font-medium text-[var(--color-text-secondary)] mr-1">Share:</span>
+      <a
+        href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[#1da1f2] hover:bg-[#1da1f2]/10 transition-colors duration-150"
+        aria-label="Share on Twitter"
+      >
+        <Twitter size={15} />
+      </a>
+      <a
+        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[#0077b5] hover:bg-[#0077b5]/10 transition-colors duration-150"
+        aria-label="Share on LinkedIn"
+      >
+        <Linkedin size={15} />
+      </a>
+      <button
+        type="button"
+        onClick={copyLink}
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--color-text-secondary)] hover:text-[var(--color-primary-blue)] hover:bg-[var(--color-primary-blue)]/10 transition-colors duration-150 cursor-pointer"
+        aria-label="Copy link"
+      >
+        {copied ? <Check size={15} className="text-emerald-400" /> : <LinkIcon size={15} />}
+      </button>
+    </div>
+  );
 }
 
 function formatDateTime(iso: string): { date: string; time: string } {
@@ -40,6 +88,7 @@ export default function EventDetailsPage({ params }: Props) {
       try {
         const data = await api.get<EventDetail>(`/events/${slug}`, true);
         setEvent(data);
+        document.title = `${data.title} | Codrithm Events`;
       } catch (err) {
         if (err instanceof ApiClientError) setError(err.detail);
         else setError("Failed to load event");
@@ -121,6 +170,10 @@ export default function EventDetailsPage({ params }: Props) {
             <div className="prose max-w-none">
               <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-3">About this event</h2>
               <div className="text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-line">{event.description}</div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-[var(--color-border)]">
+              <ShareButtons title={event.title} slug={event.slug} />
             </div>
           </div>
 

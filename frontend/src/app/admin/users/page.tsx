@@ -23,6 +23,7 @@ function RoleBadge({ role }: { role: string }) {
 const thCls = "text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]";
 const tdCls = "px-5 py-4 text-sm text-[var(--color-text-primary)]";
 const ROLES = ["All", "admin", "organizer", "user", "guest"];
+const PAGE_SIZE = 10;
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -30,6 +31,9 @@ function formatDate(iso: string): string {
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -37,18 +41,31 @@ export default function AdminUsersPage() {
   const [changing, setChanging] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
+      setLoading(true);
+      setError("");
       try {
-        const data = await api.get<{ items: User[]; total: number }>("/admin/users");
-        setUsers(data.items);
+        const params = new URLSearchParams();
+        params.set("page", String(page));
+        params.set("limit", String(PAGE_SIZE));
+        const data = await api.get<{ items: User[]; total: number; page: number; pages: number }>(`/admin/users?${params.toString()}`);
+        if (!cancelled) {
+          setUsers(data.items);
+          setTotal(data.total);
+          setPages(data.pages);
+        }
       } catch (err) {
-        if (err instanceof ApiClientError) setError(err.detail);
-        else setError("Failed to load users");
+        if (!cancelled) {
+          if (err instanceof ApiClientError) setError(err.detail);
+          else setError("Failed to load users");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
-  }, []);
+    return () => { cancelled = true; };
+  }, [page]);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     setChanging(userId);
@@ -64,7 +81,7 @@ export default function AdminUsersPage() {
   };
 
   const filtered = users.filter((u) => {
-    const matchesSearch = u.full_name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = !search || u.full_name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
     const matchesRole = roleFilter === "All" || u.role === roleFilter;
     return matchesSearch && matchesRole;
   });
@@ -90,11 +107,11 @@ export default function AdminUsersPage() {
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1 max-w-sm">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] pointer-events-none" />
-            <input type="text" placeholder="Search by name or email…" value={search} onChange={(e) => setSearch(e.target.value)}
+            <input type="text" placeholder="Search by name or email…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-blue)]/40" />
           </div>
           <div className="relative">
-            <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
+            <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
               className="appearance-none pl-4 pr-9 py-2.5 rounded-xl text-sm bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-blue)]/40 cursor-pointer">
               {ROLES.map((r) => (<option key={r} value={r}>{r === "All" ? "All roles" : r}</option>))}
             </select>
@@ -170,6 +187,26 @@ export default function AdminUsersPage() {
             ))
           )}
         </div>
+
+        {pages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-8">
+            <button type="button" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="px-4 py-2 rounded-xl text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-primary-blue)] hover:text-[var(--color-text-primary)] transition-colors duration-150 cursor-pointer"
+            >← Previous</button>
+            {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+              <button key={p} type="button" onClick={() => setPage(p)}
+                className={`w-10 h-10 rounded-xl text-sm font-semibold border transition-colors duration-150 cursor-pointer ${p === page ? "bg-[var(--color-primary-blue)] border-[var(--color-primary-blue)] text-white" : "border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary-blue)] hover:text-[var(--color-text-primary)]"}`}
+              >{p}</button>
+            ))}
+            <button type="button" disabled={page >= pages} onClick={() => setPage((p) => p + 1)}
+              className="px-4 py-2 rounded-xl text-sm font-medium border border-[var(--color-border)] text-[var(--color-text-secondary)] disabled:opacity-40 disabled:cursor-not-allowed hover:border-[var(--color-primary-blue)] hover:text-[var(--color-text-primary)] transition-colors duration-150 cursor-pointer"
+            >Next →</button>
+          </div>
+        )}
+
+        <p className="text-xs text-[var(--color-text-secondary)] text-center mt-4">
+          Showing {filtered.length} of {total} users
+        </p>
       </div>
     </main>
   );

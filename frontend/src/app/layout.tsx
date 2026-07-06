@@ -16,9 +16,40 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Codrithm Events",
+  title: {
+    default: "Codrithm Events — Discover, Register, Manage",
+    template: "%s | Codrithm Events",
+  },
   description:
-    "Discover events, register in seconds, and manage everything in one place.",
+    "Discover tech events, workshops, and meetups. Register in seconds, manage your events, and connect with the community — all in one place.",
+  keywords: ["events", "tech events", "workshops", "meetups", "hackathons", "conferences", "registration", "coding"],
+  authors: [{ name: "Codrithm" }],
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://codrithm-event-ms.vercel.app",
+    siteName: "Codrithm Events",
+    title: "Codrithm Events — Discover, Register, Manage",
+    description: "Discover tech events, workshops, and meetups. Register in seconds and connect with the community.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Codrithm Events",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Codrithm Events — Discover, Register, Manage",
+    description: "Discover tech events, workshops, and meetups. Register in seconds and connect with the community.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
     icon: [
       { url: "/logo.svg", type: "image/svg+xml" },
