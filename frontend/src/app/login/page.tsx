@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Chrome } from "lucide-react";
 import AuthCard from "@/components/AuthCard";
 import { api, ApiClientError } from "@/lib/api";
-import { setStoredUser } from "@/lib/auth";
+import { setStoredUser, setFrontendSessionCookie } from "@/lib/auth";
 import type { User } from "@/types";
 
 const inputCls = `
@@ -48,7 +48,8 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      await api.post("/auth/login", { email, password }, true);
+      const tokens = await api.post<{ access_token: string; refresh_token: string }>("/auth/login", { email, password }, true);
+      setFrontendSessionCookie(tokens.access_token);
 
       const user = await api.get<User>("/users/me");
       setStoredUser(user as unknown as Record<string, unknown>);

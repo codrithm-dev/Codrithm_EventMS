@@ -143,7 +143,7 @@ async def google_callback(code: str = None, state: str = None, response: Respons
     jwt_access = create_access_token(user.id, user.role.value if hasattr(user.role, "value") else str(user.role))
     jwt_refresh = create_refresh_token(user.id)
 
-    resp = RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback")
+    resp = RedirectResponse(f"{settings.FRONTEND_URL}/auth/callback?token={jwt_access}")
     _set_auth_cookies(resp, jwt_access, jwt_refresh)
     return resp
 

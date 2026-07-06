@@ -17,6 +17,15 @@ export function setTokens(_accessToken: string, _refreshToken: string): void {
   // This function is kept for backward compatibility but does nothing
 }
 
+export function setFrontendSessionCookie(token: string): void {
+  if (typeof document === "undefined") return;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const maxAge = payload.exp ? payload.exp - Math.floor(Date.now() / 1000) : 1800;
+    document.cookie = `access_token=${token}; path=/; max-age=${maxAge}; sameSite=lax`;
+  } catch {}
+}
+
 export function removeTokens(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(USER_KEY);
@@ -47,6 +56,7 @@ export function logout(): void {
     credentials: "include",
   }).catch(() => {});
   localStorage.removeItem(USER_KEY);
+  document.cookie = "access_token=; path=/; max-age=0";
   window.location.href = "/login";
 }
 

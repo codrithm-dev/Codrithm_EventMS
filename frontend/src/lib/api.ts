@@ -26,6 +26,14 @@ async function refreshAccessToken(): Promise<boolean> {
       headers: { "Content-Type": "application/json" },
     });
     if (!res.ok) return false;
+    const data = await res.json();
+    if (data.access_token) {
+      try {
+        const payload = JSON.parse(atob(data.access_token.split(".")[1]));
+        const maxAge = payload.exp ? payload.exp - Math.floor(Date.now() / 1000) : 1800;
+        document.cookie = `access_token=${data.access_token}; path=/; max-age=${maxAge}; sameSite=lax`;
+      } catch {}
+    }
     return true;
   } catch {
     return false;
